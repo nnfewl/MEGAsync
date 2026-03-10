@@ -1650,5 +1650,7 @@
         <file alias="reddish/tray_icon_logging_frame_2.svg">images/system_tray/reddish/tray_icon_logging_frame_2.svg</file>
         <file alias="reddish/tray_icon_logging_frame_1.svg">images/system_tray/reddish/tray_icon_logging_frame_1.svg</file>
         <file alias="folder-sync_small_thin_outline">images/themed/tokenizable/folder-sync_small_thin_outline.svg</file>
+        <file alias="images/mega_info_background.png">images/mega_info_background.png</file>
+        <file alias="images/mega_rec_icon.svg">images/mega_rec_icon.svg</file>
     </qresource>
 </RCC>

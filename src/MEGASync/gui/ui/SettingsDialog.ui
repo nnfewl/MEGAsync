@@ -202,6 +202,10 @@ margin-bottom: 3px;
 #bLearnMore
 {
 padding-left: 0px;
+}
+#gGeneral
+{
+border: none
 }</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -730,7 +734,7 @@ padding-left: 0px;
       <string notr="true"/>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="pGeneral">
       <property name="sizePolicy">
@@ -785,7 +789,7 @@ padding-left: 0px;
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_4">
             <property name="spacing">
-             <number>12</number>
+             <number>20</number>
             </property>
             <item>
              <widget class="QCheckBox" name="cStartOnStartup">
@@ -958,7 +962,7 @@ padding-left: 0px;
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="1,1">
          <item>
-          <widget class="QGroupBox" name="gLanguage">
+          <widget class="LineTitleGroupBox" name="gLanguage">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -969,7 +973,7 @@ padding-left: 0px;
             <string>Language</string>
            </property>
            <property name="type" stdset="0">
-            <string notr="true">mega</string>
+            <string notr="true">topLine</string>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_17">
             <property name="leftMargin">
@@ -1026,7 +1030,7 @@ padding-left: 0px;
             <number>0</number>
            </property>
            <item>
-            <widget class="QGroupBox" name="gThemeSelector">
+            <widget class="LineTitleGroupBox" name="gThemeSelector">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -1037,7 +1041,10 @@ padding-left: 0px;
               <string>Theme</string>
              </property>
              <property name="type" stdset="0">
-              <string notr="true">mega</string>
+              <string notr="true">topLine</string>
+             </property>
+             <property name="borderless" stdset="0">
+              <bool>true</bool>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_21">
               <property name="leftMargin">
@@ -1098,7 +1105,7 @@ padding-left: 0px;
         </layout>
        </item>
        <item>
-        <widget class="QGroupBox" name="gSleepSettings">
+        <widget class="LineTitleGroupBox" name="gSleepSettings">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -1109,7 +1116,10 @@ padding-left: 0px;
           <string>Sleep settings</string>
          </property>
          <property name="type" stdset="0">
-          <string notr="true">mega</string>
+          <string notr="true">topLine</string>
+         </property>
+         <property name="borderless" stdset="0">
+          <bool>true</bool>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_9">
           <property name="spacing">
@@ -1144,18 +1154,24 @@ padding-left: 0px;
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="gBugReport">
+        <widget class="LineTitleGroupBox" name="gBugReport">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
          <property name="title">
           <string>Issue report</string>
          </property>
          <property name="type" stdset="0">
-          <string notr="true">mega</string>
+          <string notr="true">topLine</string>
+         </property>
+         <property name="borderless" stdset="0">
+          <bool>true</bool>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_5">
           <property name="spacing">
@@ -3282,6 +3298,19 @@ margin-top: 0px;
           <property name="bottomMargin">
            <number>0</number>
           </property>
+          <item>
+           <widget class="QPushButton" name="bAboutMega">
+            <property name="text">
+             <string>About MEGA </string>
+            </property>
+            <property name="type" stdset="0">
+             <string notr="true">secondary</string>
+            </property>
+            <property name="dimension" stdset="0">
+             <string notr="true">small</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
         <widget class="QWidget" name="wAccountFooter">
@@ -3475,6 +3504,11 @@ margin-top: 0px;
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
+   <class>IconLabel</class>
+   <extends>QToolButton</extends>
+   <header>tokenizer/TokenizableItems/IconLabel.h</header>
+  </customwidget>
+  <customwidget>
    <class>TokenizableToolButton</class>
    <extends>QToolButton</extends>
    <header>tokenizer/TokenizableItems/TokenizableButtons.h </header>
@@ -3484,11 +3518,6 @@ margin-top: 0px;
    <extends>QWidget</extends>
    <header>AvatarWidget.h</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>IconLabel</class>
-   <extends>QToolButton</extends>
-   <header>tokenizer/TokenizableItems/IconLabel.h</header>
   </customwidget>
   <customwidget>
    <class>TokenizableButton</class>
@@ -3517,6 +3546,12 @@ margin-top: 0px;
    <class>BackupSettingsUI</class>
    <extends>QWidget</extends>
    <header>syncs/gui/Backups/BackupSettingsUI.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>LineTitleGroupBox</class>
+   <extends>QGroupBox</extends>
+   <header>LineTitleGroupBox.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

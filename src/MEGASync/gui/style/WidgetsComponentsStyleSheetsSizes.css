@@ -207,7 +207,22 @@ font-weight: 600;
 font-size: 12px;
 }
 
+QGroupBox[type="topLine"]
+{
+margin-top: 21px;
+border: none;
+}
 
+QGroupBox::title[type="topLine"]
+{
+subcontrol-origin: margin;
+subcontrol-position: top left;
+padding: 0 0 4px 12px;
+/* Semi-bold */
+font-weight: 600;
+/* Body-2 */
+font-size: 10px;
+}
 /*
     QProgressBar
 */

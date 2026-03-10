@@ -2,6 +2,7 @@
 #define CHANGELOGDIALOG_H
 
 #include <QDialog>
+#include <QPixmap>
 
 namespace Ui {
 class ChangeLogDialog;
@@ -17,11 +18,13 @@ public:
 
 private:
     Ui::ChangeLogDialog *ui;
+    QPixmap mHeaderBackground;
 
     void setChangeLogNotes(QString notes);
 
 protected:
     bool event(QEvent* event) override;
+    bool eventFilter(QObject* obj, QEvent* event) override;
     void tweakStrings();
 
 private slots:

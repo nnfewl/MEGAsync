@@ -149,6 +149,7 @@ SettingsDialog::SettingsDialog(MegaApplication* app, bool proxyOnly, QWidget* pa
     connect(mUi->bSyncs, &QPushButton::clicked, this, &SettingsDialog::on_bSyncs_clicked);
 
     connect(mUi->bLearnMore, &QPushButton::clicked, this, &SettingsDialog::onBLearnMore);
+    connect(mUi->bAboutMega, &QPushButton::clicked, this, &SettingsDialog::onBAboutMega);
 
     // React to AppState changes
     connect(AppState::instance().get(),
@@ -1790,4 +1791,9 @@ void SettingsDialog::onRequestTaskbarPinningTimeout()
 void SettingsDialog::onBLearnMore()
 {
     Utilities::openUrl(ServiceUrls::getSyncDebrisHelpLink());
+}
+
+void SettingsDialog::onBAboutMega()
+{
+    MegaSyncApp->showChangeLog();
 }
