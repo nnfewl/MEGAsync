@@ -557,7 +557,7 @@ border-color: #ff494a4d; /*colorToken.border-disabled*/
 QAbstractButton[type="secondary"]
 {
 background-color: #ff04101E; /*colorToken.button-secondary*/
-color: #ffFAFAFB; /*colorToken.text-secondary*/
+color: #ffFAFAFB; /*colorToken.text-primary*/
 }
 
 QAbstractButton:hover[type="secondary"]

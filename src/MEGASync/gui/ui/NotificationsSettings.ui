@@ -85,7 +85,7 @@
     <widget class="QWidget" name="NotificationSettingCheckboxes" native="true">
      <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0,0,0">
       <property name="spacing">
-       <number>24</number>
+       <number>36</number>
       </property>
       <property name="leftMargin">
        <number>0</number>

@@ -10,6 +10,9 @@
 #include "MegaApplication.h"
 #include "NodeSelectorSpecializations.h"
 #include "ParallelConnectionsValues.h"
+#ifndef Q_OS_WINDOWS
+#include "PermissionsDialog.h"
+#endif
 #include "Platform.h"
 #include "PowerOptions.h"
 #include "ProxySettings.h"
@@ -115,7 +118,20 @@ SettingsDialog::SettingsDialog(MegaApplication* app, bool proxyOnly, QWidget* pa
             });
 
     mUi->bGeneral->setChecked(true); // override whatever might be set in .ui
-    mUi->gCache->setTitle(mUi->gCache->title().arg(QString::fromUtf8(MEGA_DEBRIS_FOLDER)));
+    mUi->lCacheTitle->setText(mUi->lCacheTitle->text().arg(QString::fromUtf8(MEGA_DEBRIS_FOLDER)));
+
+    mUi->lPermissionsSectionTitle->hide();
+    mUi->fPermissionsLine->hide();
+    mUi->lPermissionsSectionDesc->hide();
+    mUi->fPermissionsLine->hide();
+    mUi->bChangePermissions->hide();
+
+#ifndef Q_OS_WINDOWS
+    mUi->lPermissionsSectionTitle->show();
+    mUi->bChangePermissions->show();
+    mUi->fPermissionsLine->show();
+    mUi->lPermissionsSectionDesc->show();
+#endif
 
 #ifdef Q_OS_LINUX
     mUi->bUpdate->hide();
@@ -413,7 +429,7 @@ void SettingsDialog::loadSettings()
 
     updateNetworkTab();
 
-    // Folders tab
+    // File management tab
     mUi->syncSettings->setParentDialog(this);
     mUi->backupSettings->setParentDialog(this);
 
@@ -482,7 +498,8 @@ bool SettingsDialog::event(QEvent* event)
         mUi->cStartOnStartup->setText(tr("Launch at login"));
         this->setWindowTitle(tr("Settings"));
 #else
-        mUi->gCache->setTitle(mUi->gCache->title().arg(QString::fromUtf8(MEGA_DEBRIS_FOLDER)));
+        mUi->lCacheTitle->setText(
+            mUi->lCacheTitle->text().arg(QString::fromUtf8(MEGA_DEBRIS_FOLDER)));
 #endif
 
         onCacheSizeAvailable();
@@ -1252,9 +1269,9 @@ void SettingsDialog::setGeneralTabEnabled(const bool enabled)
 
     mUi->gGeneral->setEnabled(enabled);
     mUi->cLanguage->setEnabled(enabled);
-    mUi->gCache->setEnabled(enabled);
-    mUi->gRemoteCache->setEnabled(enabled);
-    mUi->gFileVersions->setEnabled(enabled);
+    mUi->wCacheSection->setEnabled(enabled);
+    mUi->wRemoteCacheSection->setEnabled(enabled);
+    mUi->wFileVersionsSection->setEnabled(enabled);
 
 #ifdef Q_OS_LINUX
     mUi->cbSleepMode->setEnabled(enabled);
@@ -1442,7 +1459,7 @@ void SettingsDialog::on_bSessionHistory_clicked()
     Utilities::openUrl(ServiceUrls::getSessionHistoryUrl());
 }
 
-// Folders -----------------------------------------------------------------------------------------
+// File management -----------------------------------------------------------------------------
 void SettingsDialog::updateUploadFolder()
 {
     const QString defaultFolderName =
@@ -1564,6 +1581,43 @@ void SettingsDialog::on_bDownloadFolder_clicked()
             }
         });
 }
+
+#ifndef Q_OS_WINDOWS
+void SettingsDialog::on_bChangePermissions_clicked()
+{
+    MegaSyncApp->getMegaApi()->setDefaultFolderPermissions(
+        Preferences::instance()->folderPermissionsValue());
+    int folderPermissions = MegaSyncApp->getMegaApi()->getDefaultFolderPermissions();
+
+    MegaSyncApp->getMegaApi()->setDefaultFilePermissions(
+        Preferences::instance()->filePermissionsValue());
+    int filePermissions = MegaSyncApp->getMegaApi()->getDefaultFilePermissions();
+
+    QPointer<PermissionsDialog> dialog = new PermissionsDialog(this);
+    dialog->setFolderPermissions(folderPermissions);
+    dialog->setFilePermissions(filePermissions);
+    DialogOpener::showDialog<PermissionsDialog>(
+        dialog,
+        [dialog]()
+        {
+            if (dialog->result() == QDialog::Accepted)
+            {
+                const auto filePermissions = dialog->filePermissions();
+                const auto folderPermissions = dialog->folderPermissions();
+
+                if (filePermissions != Preferences::instance()->filePermissionsValue() ||
+                    folderPermissions != Preferences::instance()->folderPermissionsValue())
+                {
+                    Preferences::instance()->setFilePermissionsValue(filePermissions);
+                    MegaSyncApp->getMegaApi()->setDefaultFilePermissions(filePermissions);
+
+                    Preferences::instance()->setFolderPermissionsValue(folderPermissions);
+                    MegaSyncApp->getMegaApi()->setDefaultFolderPermissions(folderPermissions);
+                }
+            }
+        });
+}
+#endif
 
 void SettingsDialog::onShellNotificationsProcessed()
 {

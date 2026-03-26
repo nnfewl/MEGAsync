@@ -58,7 +58,7 @@ public:
     // Backup
     void on_bBackup_clicked();
 
-    // Folders
+    // File management
     void updateUploadFolder();
     void updateDownloadFolder();
 
@@ -121,10 +121,13 @@ private slots:
     void on_bChangePassword_clicked();
     void on_bSessionHistory_clicked();
 
-    // Folders
+    // File management
     void on_bFolders_clicked();
     void on_bUploadFolder_clicked();
     void on_bDownloadFolder_clicked();
+#ifndef Q_OS_WINDOWS
+    void on_bChangePermissions_clicked();
+#endif
 
     // Network
     void on_bNetwork_clicked();
