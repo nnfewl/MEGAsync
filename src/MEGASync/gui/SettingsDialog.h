@@ -4,6 +4,7 @@
 #include "AppState.h"
 #include "megaapi.h"
 #include "Preferences.h"
+#include "qml/AccountStateQuickWidget.h"
 #include "SyncInfo.h"
 #include "UsersUpdateListener.h"
 #include "Utilities.h"
@@ -19,7 +20,6 @@ class SettingsDialog;
 
 class ProxySettings;
 class MegaApplication;
-
 class SettingsDialog : public QDialog, public IStorageObserver, public IBandwidthObserver,
         public IAccountObserver
 {
@@ -126,9 +126,8 @@ private slots:
     void on_bUploadFolder_clicked();
     void on_bDownloadFolder_clicked();
 #ifndef Q_OS_WINDOWS
-    void on_bChangePermissions_clicked();
+    void onPermissionsClicked();
 #endif
-
     // Network
     void on_bNetwork_clicked();
     void on_bOpenProxySettings_clicked();
@@ -163,7 +162,7 @@ private:
     void updateCacheSchedulerDaysLabel();
     void setGeneralTabEnabled(const bool enabled);
     void setOverlayCheckboxEnabled(const bool enabled, const bool checked);
-    void setProgressState(const QString& stateName);
+    AccountStateQuickWidget::ProgressState storageProgressState() const;
     void startRequestTaskbarPinningTimer();
     void initColorTheme();
     void onEmailClicked();
@@ -188,5 +187,6 @@ private:
     bool mHasDefaultDownloadOption;
     std::unique_ptr<UsersUpdateListener> usersUpdateListener;
     QTimer* mTaskbarPinningRequestTimer;
+    AccountStateQuickWidget* mAccountStateQuickWidget;
 };
 #endif // SETTINGSDIALOG_H

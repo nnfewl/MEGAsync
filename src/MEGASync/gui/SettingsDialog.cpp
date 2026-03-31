@@ -10,14 +10,14 @@
 #include "MegaApplication.h"
 #include "NodeSelectorSpecializations.h"
 #include "ParallelConnectionsValues.h"
-#ifndef Q_OS_WINDOWS
 #include "PermissionsDialog.h"
-#endif
 #include "Platform.h"
 #include "PowerOptions.h"
 #include "ProxySettings.h"
+#include "qml/AccountStateQuickWidget.h"
 #include "StatsEventHandler.h"
 #include "ThemeManager.h"
+#include "TransferQuota.h"
 #include "ui_SettingsDialog.h"
 #include "Utilities.h"
 
@@ -42,6 +42,65 @@ using namespace std::chrono_literals;
 static const QString SYNCS_TAB_MENU_LABEL_QSS =
     QString::fromLatin1("QLabel{ border-image: url(%1); }");
 static constexpr int NUMBER_OF_CLICKS_TO_DEBUG{5};
+
+namespace
+{
+QVariantMap buildUsageSegment(AccountStateQuickWidget::UsageSegmentType type,
+                              const QString& label,
+                              long long value)
+{
+    QVariantMap segment;
+    segment.insert(QString::fromLatin1("type"), static_cast<int>(type));
+    segment.insert(QString::fromLatin1("label"), label);
+    segment.insert(QString::fromLatin1("value"), QVariant::fromValue(value));
+    segment.insert(QString::fromLatin1("sizeText"), Utilities::getSizeString(value));
+    return segment;
+}
+
+QVariantList buildStorageSegments(Preferences* preferences)
+{
+    QVariantList segments;
+    segments.push_back(
+        buildUsageSegment(AccountStateQuickWidget::CloudDrive,
+                          QCoreApplication::translate("SettingsDialog", "Cloud Drive"),
+                          preferences->cloudDriveStorage()));
+    segments.push_back(buildUsageSegment(AccountStateQuickWidget::Backups,
+                                         QCoreApplication::translate("SettingsDialog", "Backups"),
+                                         preferences->vaultStorage()));
+    segments.push_back(
+        buildUsageSegment(AccountStateQuickWidget::RubbishBin,
+                          QCoreApplication::translate("SettingsDialog", "Rubbish Bin"),
+                          preferences->rubbishStorage()));
+    segments.push_back(buildUsageSegment(AccountStateQuickWidget::Versions,
+                                         QCoreApplication::translate("SettingsDialog", "Versions"),
+                                         preferences->versionsStorage()));
+    return segments;
+}
+
+QVariantList buildTransferSegments(Preferences* preferences)
+{
+    QVariantList segments;
+    segments.push_back(buildUsageSegment(AccountStateQuickWidget::Downloads,
+                                         QCoreApplication::translate("SettingsDialog", "Downloads"),
+                                         preferences->usedBandwidth()));
+    return segments;
+}
+
+AccountStateQuickWidget::ProgressState quotaStateToProgressState(QuotaState quotaState)
+{
+    switch (quotaState)
+    {
+        case QuotaState::WARNING:
+            return AccountStateQuickWidget::WARNING;
+        case QuotaState::OVERQUOTA:
+        case QuotaState::FULL:
+            return AccountStateQuickWidget::FULL;
+        case QuotaState::OK:
+        default:
+            return AccountStateQuickWidget::OK;
+    }
+}
+}
 
 long long calculateCacheSize()
 {
@@ -85,10 +144,17 @@ SettingsDialog::SettingsDialog(MegaApplication* app, bool proxyOnly, QWidget* pa
     mRemoteCacheSize(-1),
     mDebugCounter(0),
     mKeepLogsCounter(0),
-    usersUpdateListener(std::make_unique<UsersUpdateListener>())
+    usersUpdateListener(std::make_unique<UsersUpdateListener>()),
+    mAccountStateQuickWidget(nullptr)
 {
     mUi->setupUi(this);
     mUi->lEmail->installEventFilter(this);
+
+    mAccountStateQuickWidget = mUi->accountStateQuickWidget;
+    connect(mAccountStateQuickWidget,
+            &AccountStateQuickWidget::upgradeRequested,
+            this,
+            &SettingsDialog::on_bUpgrade_clicked);
 
     connect(usersUpdateListener.get(),
             &UsersUpdateListener::userEmailUpdated,
@@ -120,22 +186,9 @@ SettingsDialog::SettingsDialog(MegaApplication* app, bool proxyOnly, QWidget* pa
     mUi->bGeneral->setChecked(true); // override whatever might be set in .ui
     mUi->lCacheTitle->setText(mUi->lCacheTitle->text().arg(QString::fromUtf8(MEGA_DEBRIS_FOLDER)));
 
-    mUi->lPermissionsSectionTitle->hide();
-    mUi->fPermissionsLine->hide();
-    mUi->lPermissionsSectionDesc->hide();
-    mUi->fPermissionsLine->hide();
-    mUi->bChangePermissions->hide();
-
-#ifndef Q_OS_WINDOWS
-    mUi->lPermissionsSectionTitle->show();
-    mUi->bChangePermissions->show();
-    mUi->fPermissionsLine->show();
-    mUi->lPermissionsSectionDesc->show();
-#endif
-
 #ifdef Q_OS_LINUX
-    mUi->bUpdate->hide();
-    mUi->cAutoUpdate->hide();
+    // mUi->bUpdate->hide();
+    // mUi->cAutoUpdate->hide();
 #endif
 
     mUi->cDesktopIntegration->hide();
@@ -148,7 +201,14 @@ SettingsDialog::SettingsDialog(MegaApplication* app, bool proxyOnly, QWidget* pa
     this->setWindowTitle(tr("Settings"));
     mUi->cStartOnStartup->setText(tr("Launch at login"));
 #endif
-
+    mUi->vPermissionsWidget->setVisible(false);
+#ifndef Q_OS_WINDOWS
+    mUi->vPermissionsWidget->setVisible(true);
+    connect(mUi->bChangePermissions,
+            &QPushButton::clicked,
+            this,
+            &SettingsDialog::onPermissionsClicked);
+#endif
     setProxyOnly(proxyOnly);
 
     AccountDetailsManager::instance()->attachStorageObserver(*this);
@@ -345,7 +405,7 @@ void SettingsDialog::loadSettings()
         QString file = it.next();
         if (file.startsWith(fullPrefix))
         {
-            const auto extensionIndex = file.lastIndexOf(u'.');
+            int extensionIndex = file.lastIndexOf(QString::fromUtf8("."));
             if ((extensionIndex - fullPrefix.size()) <= 0)
             {
                 continue;
@@ -355,7 +415,7 @@ void SettingsDialog::loadSettings()
             QString languageString = Utilities::languageCodeToString(languageCode);
             if (!languageString.isEmpty())
             {
-                auto i = 0;
+                int i = 0;
                 while (i < languages.size() && (languageString > languages[i]))
                 {
                     i++;
@@ -366,8 +426,7 @@ void SettingsDialog::loadSettings()
         }
     }
 
-    const auto langs = static_cast<int>(mLanguageCodes.size());
-    for (int i = langs - 1; i >= 0; i--)
+    for (int i = mLanguageCodes.size() - 1; i >= 0; i--)
     {
         if (currentLanguage.startsWith(mLanguageCodes[i]))
         {
@@ -378,7 +437,7 @@ void SettingsDialog::loadSettings()
 
     if (currentIndex == -1)
     {
-        currentIndex = static_cast<int>(mLanguageCodes.indexOf(QString::fromUtf8("en")));
+        currentIndex = mLanguageCodes.indexOf(QString::fromUtf8("en"));
     }
 
     mUi->cLanguage->addItems(languages);
@@ -401,7 +460,8 @@ void SettingsDialog::loadSettings()
 
     mUi->lName->setText(mUi->lName->fontMetrics().elidedText(fullName,
                                                              Qt::ElideMiddle,
-                                                             mUi->lName->maximumWidth()));
+                                                             mUi->lName->maximumWidth()) +
+                        QString::fromUtf8(" • "));
 
     // Update name in case it changes
     connect(fullNameRequest.get(),
@@ -409,7 +469,10 @@ void SettingsDialog::loadSettings()
             this,
             [this](const QString& fullName)
             {
-                mUi->lName->setText(mUi->lName->fontMetrics().elidedText(fullName,Qt::ElideMiddle,mUi->lName->maximumWidth()));
+                mUi->lName->setText(
+                    mUi->lName->fontMetrics().elidedText(fullName,
+                                                         Qt::ElideMiddle,
+                                                         mUi->lName->maximumWidth()));
             });
 
     // Avatar
@@ -549,15 +612,15 @@ void SettingsDialog::on_bGeneral_clicked()
 void SettingsDialog::on_bClearCache_clicked()
 {
     QString syncs;
-    const auto allSyncsSettings = mModel->getAllSyncSettings();
-    for (const auto& syncSetting: allSyncsSettings)
+    for (auto syncSetting: mModel->getAllSyncSettings())
     {
         QFileInfo fi(syncSetting->getLocalFolder() + QDir::separator() +
                      QString::fromUtf8(MEGA_DEBRIS_FOLDER));
         if (fi.exists() && fi.isDir())
         {
             syncs += QString::fromUtf8("<br/><a href=\"local://#%1\">%2</a>")
-                         .arg(fi.absoluteFilePath() + QDir::separator(), syncSetting->name());
+                         .arg(fi.absoluteFilePath() + QDir::separator())
+                         .arg(syncSetting->name());
         }
     }
 
@@ -577,7 +640,7 @@ void SettingsDialog::on_bClearCache_clicked()
     {
         if (msg->result() == QMessageBox::Yes)
         {
-            QThreadPool::globalInstance()->start(deleteCache);
+            QtConcurrent::run(deleteCache);
             mCacheSize = 0;
             onCacheSizeAvailable();
         }
@@ -617,11 +680,7 @@ void SettingsDialog::on_bClearRemoteCache_clicked()
     {
         if (msg->result() == QMessageBox::Yes)
         {
-            QThreadPool::globalInstance()->start(
-                [=]()
-                {
-                    deleteRemoteCache(mMegaApi);
-                });
+            QtConcurrent::run(deleteRemoteCache, mMegaApi);
             mRemoteCacheSize = 0;
             onCacheSizeAvailable();
         }
@@ -847,8 +906,7 @@ void SettingsDialog::on_cDesktopIntegration_toggled(bool checked)
     // 1. Toggle left pane sync shortcuts in the explorer
     if (checked)
     {
-        const auto allSyncsSettings = mModel->getAllSyncSettings();
-        for (const auto& syncSetting: allSyncsSettings)
+        for (auto syncSetting: mModel->getAllSyncSettings())
         {
             Platform::getInstance()->addSyncToLeftPane(syncSetting->getLocalFolder(),
                                                        syncSetting->name(),
@@ -928,31 +986,41 @@ void SettingsDialog::updateStorageElements()
 {
     auto totalStorage = mPreferences->totalStorage();
     auto usedStorage = mPreferences->usedStorage();
+    const auto availableStorage = std::max(0ll, totalStorage - usedStorage);
+    QString storageSummary;
+    QString availableText;
+    int percentage = 0;
+    auto state = AccountStateQuickWidget::OK;
+    const auto segments = buildStorageSegments(mPreferences.get());
+    const auto isBusinessAccount = Utilities::isBusinessAccount();
+
     if (totalStorage == 0)
     {
-        mUi->pStorageQuota->setValue(0);
-        mUi->lStorage->setText(tr("Data temporarily unavailable"));
-        mUi->bStorageDetails->setEnabled(false);
+        storageSummary = tr("Data temporarily unavailable");
     }
     else
     {
-        mUi->bStorageDetails->setEnabled(true);
-
-        if (Utilities::isBusinessAccount())
+        if (isBusinessAccount)
         {
-            mUi->lStorage->setText(Utilities::createSimpleUsedString(usedStorage));
+            storageSummary = Utilities::createSimpleUsedString(usedStorage);
+            percentage = 100;
         }
         else
         {
-            int percentage = Utilities::partPer(usedStorage, totalStorage);
-
-            setProgressState(QLatin1String("storageState"));
-
-            mUi->pStorageQuota->setValue(std::min(percentage, mUi->pStorageQuota->maximum()));
-            mUi->lStorage->setText(
-                Utilities::createCompleteUsedString(usedStorage, totalStorage, percentage));
+            percentage = Utilities::partPer(usedStorage, totalStorage);
+            state = storageProgressState();
+            storageSummary =
+                Utilities::createCompleteUsedString(usedStorage, totalStorage, percentage);
+            availableText = Utilities::getSizeString(availableStorage);
         }
     }
+
+    mAccountStateQuickWidget->setStorageData(storageSummary,
+                                             availableText,
+                                             percentage,
+                                             state,
+                                             segments,
+                                             isBusinessAccount && totalStorage > 0);
 }
 
 void SettingsDialog::updateBandwidthElements()
@@ -960,42 +1028,53 @@ void SettingsDialog::updateBandwidthElements()
     int accountType = mPreferences->accountType();
     auto totalBandwidth = mPreferences->totalBandwidth();
     auto usedBandwidth = mPreferences->usedBandwidth();
-    mUi->lBandwidthFree->hide();
+    const auto availableBandwidth = std::max(0ll, totalBandwidth - usedBandwidth);
+    QString transferSummary;
+    QString availableText;
+    int percentage = 0;
+    auto state = AccountStateQuickWidget::OK;
+    const auto segments = buildTransferSegments(mPreferences.get());
+    const auto quotaState = MegaSyncApp->getTransferQuota()->quotaState();
+    const auto isBusinessAccount = Utilities::isBusinessAccount();
+    QString transferValueText;
 
     if (accountType == Preferences::ACCOUNT_TYPE_FREE)
     {
-        mUi->lBandwidth->setText(
-            tr("Used quota for the last %n hour:", "", mPreferences->bandwidthInterval()));
-        mUi->lBandwidthFree->show();
-        mUi->lBandwidthFree->setText(Utilities::getSizeString(usedBandwidth));
+        transferSummary =
+            tr("Used quota for the last %n hour: %1", "", mPreferences->bandwidthInterval())
+                .arg(Utilities::getSizeString(usedBandwidth));
     }
-    else if (Utilities::isBusinessAccount())
+    else if (isBusinessAccount)
     {
-        mUi->lBandwidth->setText(Utilities::createSimpleUsedString(usedBandwidth));
+        transferValueText = Utilities::getSizeString(usedBandwidth);
     }
     else
     {
         if (totalBandwidth == 0)
         {
-            mUi->pTransferQuota->setValue(0);
-            mUi->lBandwidth->setText(tr("Data temporarily unavailable"));
+            transferSummary = tr("Data temporarily unavailable");
         }
         else
         {
-            int percentage = Utilities::partPer(usedBandwidth, totalBandwidth);
-
-            setProgressState(QLatin1String("transferState"));
-
-            mUi->pTransferQuota->setValue(std::min(percentage, 100));
-            mUi->lBandwidth->setText(
-                Utilities::createCompleteUsedString(usedBandwidth,
-                                                    totalBandwidth,
-                                                    std::min(percentage, 100)));
+            percentage = Utilities::partPer(usedBandwidth, totalBandwidth);
+            state = quotaStateToProgressState(quotaState);
+            transferSummary = Utilities::createCompleteUsedString(usedBandwidth,
+                                                                  totalBandwidth,
+                                                                  std::min(percentage, 100));
+            availableText = Utilities::getSizeString(availableBandwidth);
         }
     }
+
+    mAccountStateQuickWidget->setTransferData(transferSummary,
+                                              availableText,
+                                              percentage,
+                                              state,
+                                              segments,
+                                              isBusinessAccount,
+                                              transferValueText);
 }
 
-void SettingsDialog::setProgressState(const QString& stateName)
+AccountStateQuickWidget::ProgressState SettingsDialog::storageProgressState() const
 {
     switch (mPreferences->getStorageState())
     {
@@ -1003,13 +1082,11 @@ void SettingsDialog::setProgressState(const QString& stateName)
         // Fallthrough
         case MegaApi::STORAGE_STATE_RED:
         {
-            setProperty(stateName.toStdString().c_str(), QLatin1String("full"));
-            break;
+            return AccountStateQuickWidget::FULL;
         }
         case MegaApi::STORAGE_STATE_ORANGE:
         {
-            setProperty(stateName.toStdString().c_str(), QLatin1String("warning"));
-            break;
+            return AccountStateQuickWidget::WARNING;
         }
         case MegaApi::STORAGE_STATE_UNKNOWN:
         // Fallthrough
@@ -1017,86 +1094,47 @@ void SettingsDialog::setProgressState(const QString& stateName)
         // Fallthrough
         default:
         {
-            setProperty(stateName.toStdString().c_str(), QLatin1String("ok"));
-            break;
+            return AccountStateQuickWidget::OK;
         }
     }
 }
 
 void SettingsDialog::updateAccountElements()
 {
-    QIcon icon;
     mUi->lAccountType->setText(Utilities::getReadablePlanFromId(mPreferences->accountType()));
+    mUi->bUpgrade->show();
+    mAccountStateQuickWidget->setShowStorageCard(true);
+    mAccountStateQuickWidget->setShowTransferCard(true);
 
     switch (mPreferences->accountType())
     {
         case Preferences::ACCOUNT_TYPE_FREE:
-            icon = Utilities::getCachedPixmap(QString::fromLatin1(":/images/Small_Free.png"));
-            mUi->pStorageQuota->show();
-            mUi->pTransferQuota->hide();
             mUi->bUpgrade->show();
+            mAccountStateQuickWidget->setShowTransferCard(false);
             break;
         case Preferences::ACCOUNT_TYPE_PROI:
-            icon = Utilities::getCachedPixmap(QString::fromLatin1(":/images/Small_Pro_I.png"));
-            mUi->pStorageQuota->show();
-            mUi->pTransferQuota->show();
-            mUi->bUpgrade->show();
             break;
         case Preferences::ACCOUNT_TYPE_PROII:
-            icon = Utilities::getCachedPixmap(QString::fromLatin1(":/images/Small_Pro_II.png"));
-            mUi->pStorageQuota->show();
-            mUi->pTransferQuota->show();
-            mUi->bUpgrade->show();
             break;
         case Preferences::ACCOUNT_TYPE_PROIII:
-            icon = Utilities::getCachedPixmap(QString::fromLatin1(":/images/Small_Pro_III.png"));
-            mUi->pStorageQuota->show();
-            mUi->pTransferQuota->show();
-            mUi->bUpgrade->show();
             break;
         case Preferences::ACCOUNT_TYPE_LITE:
-            icon = Utilities::getCachedPixmap(QString::fromLatin1(":/images/Small_Lite.png"));
-            mUi->pStorageQuota->show();
-            mUi->pTransferQuota->show();
-            mUi->bUpgrade->show();
             break;
         case Preferences::ACCOUNT_TYPE_BUSINESS:
-            icon = Utilities::getCachedPixmap(QString::fromLatin1(":/images/Small_Business.png"));
-            mUi->pStorageQuota->hide();
-            mUi->pTransferQuota->hide();
             mUi->bUpgrade->hide();
             break;
         case Preferences::ACCOUNT_TYPE_PRO_FLEXI:
-            icon = Utilities::getCachedPixmap(QString::fromLatin1(":/images/Small_Pro_Flexi.png"));
-            mUi->pStorageQuota->hide();
-            mUi->pTransferQuota->hide();
-            mUi->bUpgrade->show();
             break;
         case Preferences::ACCOUNT_TYPE_STARTER:
-            mUi->pStorageQuota->show();
-            mUi->pTransferQuota->show();
-            mUi->bUpgrade->show();
             break;
         case Preferences::ACCOUNT_TYPE_BASIC:
-            mUi->pStorageQuota->show();
-            mUi->pTransferQuota->show();
-            mUi->bUpgrade->show();
             break;
         case Preferences::ACCOUNT_TYPE_ESSENTIAL:
-            mUi->pStorageQuota->show();
-            mUi->pTransferQuota->show();
-            mUi->bUpgrade->show();
             break;
         default:
-            icon = Utilities::getCachedPixmap(QString::fromUtf8(":/images/Small_Pro_I.png"));
             mUi->lAccountType->setText(QString());
-            mUi->pStorageQuota->show();
-            mUi->pTransferQuota->show();
-            mUi->bUpgrade->show();
             break;
     }
-
-    mUi->lAccountType->setIcon(icon);
 }
 
 void SettingsDialog::on_bAccount_clicked()
@@ -1583,12 +1621,13 @@ void SettingsDialog::on_bDownloadFolder_clicked()
 }
 
 #ifndef Q_OS_WINDOWS
-void SettingsDialog::on_bChangePermissions_clicked()
+void SettingsDialog::onPermissionsClicked()
 {
+    MegaSyncApp->getStatsEventHandler()->sendTrackedEvent(
+        AppStatsEvents::EventType::SETTINGS_PERMISSIONS_CLICKED);
     MegaSyncApp->getMegaApi()->setDefaultFolderPermissions(
         Preferences::instance()->folderPermissionsValue());
     int folderPermissions = MegaSyncApp->getMegaApi()->getDefaultFolderPermissions();
-
     MegaSyncApp->getMegaApi()->setDefaultFilePermissions(
         Preferences::instance()->filePermissionsValue());
     int filePermissions = MegaSyncApp->getMegaApi()->getDefaultFilePermissions();
@@ -1636,6 +1675,7 @@ void SettingsDialog::onUserEmailChanged(mega::MegaHandle userHandle, const QStri
     {
         mPreferences->setEmail(newEmail);
         mUi->lEmail->setText(newEmail);
+        mUi->wAvatar->setUserEmail(newEmail.toUtf8().constData());
     }
 }
 

@@ -1,0 +1,3 @@
+module settings
+AccountStateSurface 1.0 AccountStateSurface.qml
+singleton SettingsStrings 1.0 SettingsStrings.qml
