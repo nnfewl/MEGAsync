@@ -7,7 +7,9 @@
 
 #include <QDateTime>
 #include <QObject>
+#include <QPointer>
 #include <QString>
+#include <QStringList>
 
 #include <memory>
 
@@ -51,22 +53,26 @@ protected:
     static bool isDiscountValid(const std::shared_ptr<mega::MegaDiscountCodeInfo>& discountInfo);
     static bool isCampaignExpiredUtc(const QDateTime& expiryDateUtc);
     std::shared_ptr<UpsellPlans::Data> findPlanByLevel(int level) const;
+    void clearPendingCampaign();
 
     // State
     bool mIsCampaignActive = false;
     bool mIsLoadingPersistedDataNeeded = true;
-    bool mIsNewCampaign = false;
     bool mIsPlanPending = false;
+    bool mPendingIsNewCampaign = false;
     QDateTime mLastTimeShownUtc;
     QDateTime mCampaignExpiryDateUtc;
+    QDateTime mPendingCampaignExpiryDateUtc;
     QString mDiscountCode;
+    QString mPendingDiscountCode;
 
     std::shared_ptr<mega::MegaDiscountCodeInfo> mDiscountInfo;
+    std::shared_ptr<mega::MegaDiscountCodeInfo> mPendingDiscountInfo;
     std::shared_ptr<Preferences> mPreferences;
 
     QPointer<UpsellController> mUpsellController;
     std::shared_ptr<UpsellPlans::Data> mDiscountedPlan = nullptr;
 
 protected slots:
-    void onPlansReady();
+    void onPricingRequestFinished(bool success);
 };

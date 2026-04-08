@@ -72,24 +72,27 @@ void DiscountPolicy::activateCampaign(std::shared_ptr<mega::MegaDiscountCodeInfo
     activateCampaign &= !(mIsCampaignActive || isNewCampaignExpired);
 
     // Activate if needed
-    if (activateCampaign && !mIsPlanPending)
+    if (activateCampaign)
     {
-        mCampaignExpiryDateUtc = newExpiryDateUtc;
-        mDiscountInfo = discountInfo;
-        mDiscountCode = newCode;
-        mIsNewCampaign = isNewCampaign;
+        mPendingCampaignExpiryDateUtc = newExpiryDateUtc;
+        mPendingDiscountInfo = discountInfo;
+        mPendingDiscountCode = newCode;
+        mPendingIsNewCampaign = isNewCampaign;
 
         // Get pricing
         if (!mUpsellController)
         {
             mUpsellController = new UpsellController(false, this);
             connect(mUpsellController,
-                    &UpsellController::dataReady,
+                    &UpsellController::pricingRequestFinished,
                     this,
-                    &DiscountPolicy::onPlansReady);
+                    &DiscountPolicy::onPricingRequestFinished);
         }
-        mIsPlanPending = true;
-        mUpsellController->requestPricingData();
+        if (!mIsPlanPending)
+        {
+            mIsPlanPending = true;
+            mUpsellController->requestPricingData();
+        }
     }
 }
 
@@ -99,24 +102,29 @@ void DiscountPolicy::deactivateCampaign()
     // re-activation
     auto wasCampaignActive = mIsCampaignActive || (!mIsLoadingPersistedDataNeeded &&
                                                    !mIsCampaignActive && !mDiscountCode.isEmpty());
+    const bool hadPendingCampaign =
+        mIsPlanPending || mPendingDiscountInfo || !mPendingDiscountCode.isEmpty();
+    const bool hadCommittedCampaign =
+        mIsCampaignActive || mDiscountInfo || mDiscountedPlan || !mDiscountCode.isEmpty();
 
-    if (wasCampaignActive || mIsPlanPending)
+    clearPendingCampaign();
+
+    if (hadCommittedCampaign)
     {
         mIsCampaignActive = false;
-        mIsNewCampaign = false;
         mDiscountInfo.reset();
+        mDiscountedPlan.reset();
 
         mDiscountCode.clear();
         mCampaignExpiryDateUtc = QDateTime();
         mLastTimeShownUtc = QDateTime();
         persist();
+    }
 
-        mIsPlanPending = false;
-        if (mUpsellController)
-        {
-            mUpsellController->deleteLater();
-            mUpsellController = nullptr;
-        }
+    if ((hadCommittedCampaign || hadPendingCampaign) && mUpsellController)
+    {
+        mUpsellController->deleteLater();
+        mUpsellController = nullptr;
     }
 
     if (wasCampaignActive)
@@ -315,38 +323,67 @@ int DiscountPolicy::getMonths() const
     return mDiscountInfo ? mDiscountInfo->getMonths() : 0;
 }
 
-void DiscountPolicy::onPlansReady()
+void DiscountPolicy::onPricingRequestFinished(bool success)
 {
-    const auto plans = mUpsellController ? mUpsellController->getPlans() : nullptr;
-
-    if (mDiscountInfo && plans && plans->size() > 0)
+    if (!mIsPlanPending)
     {
-        mDiscountedPlan =
-            findPlanByLevel(mDiscountInfo->getAccountLevel()); // For now, use the first plan
+        return;
+    }
 
-        if (mDiscountedPlan && mIsPlanPending)
+    if (!success)
+    {
+        clearPendingCampaign();
+        if (!mIsCampaignActive && mUpsellController)
         {
-            if (mIsNewCampaign)
+            mUpsellController->deleteLater();
+            mUpsellController = nullptr;
+        }
+        return;
+    }
+
+    const auto plans = mUpsellController ? mUpsellController->getPlans() : nullptr;
+    mDiscountedPlan.reset();
+
+    if (mPendingDiscountInfo && plans && plans->size() > 0)
+    {
+        mDiscountedPlan = findPlanByLevel(mPendingDiscountInfo->getAccountLevel());
+
+        if (mDiscountedPlan)
+        {
+            if (mPendingIsNewCampaign)
             {
                 MegaSyncApp->getStatsEventHandler()->sendTrackedEvent(
                     AppStatsEvents::EventType::TARGETED_DISCOUNT_CAMPAIGN_STARTED);
-                mIsNewCampaign = false;
             }
-            // Update in case it has changed (not very probable)
+
+            mCampaignExpiryDateUtc = mPendingCampaignExpiryDateUtc;
+            mDiscountInfo = std::move(mPendingDiscountInfo);
+            mDiscountCode = mPendingDiscountCode;
             persist();
             mIsCampaignActive = true;
+            clearPendingCampaign();
 
             emit campaignActivated();
+            return;
         }
     }
 
-    if (!mDiscountedPlan)
+    mega::MegaApi::log(mega::MegaApi::LOG_LEVEL_INFO, "Targeted discount: No matching plan");
+
+    const bool hasPersistedCampaign = !mDiscountCode.isEmpty();
+    if (hasPersistedCampaign)
     {
-        mega::MegaApi::log(mega::MegaApi::LOG_LEVEL_INFO, "Targeted discount: No matching plan");
         deactivateCampaign();
     }
-
-    mIsPlanPending = false;
+    else
+    {
+        clearPendingCampaign();
+        if (!mIsCampaignActive && mUpsellController)
+        {
+            mUpsellController->deleteLater();
+            mUpsellController = nullptr;
+        }
+    }
 }
 
 bool DiscountPolicy::load()
@@ -411,4 +448,13 @@ std::shared_ptr<UpsellPlans::Data> DiscountPolicy::findPlanByLevel(int level) co
         }
     }
     return {};
+}
+
+void DiscountPolicy::clearPendingCampaign()
+{
+    mIsPlanPending = false;
+    mPendingIsNewCampaign = false;
+    mPendingCampaignExpiryDateUtc = QDateTime();
+    mPendingDiscountCode.clear();
+    mPendingDiscountInfo.reset();
 }
