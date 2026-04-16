@@ -37,25 +37,10 @@ void StalledIssuesReceiver::onUpdateStalledISsues(UpdateType type)
     }
 }
 
-void StalledIssuesReceiver::rememberResolvedIssueHash(size_t hash)
+void StalledIssuesReceiver::setHashDiscardTracker(
+    std::shared_ptr<StalledIssueHashDiscardTracker> tracker)
 {
-    QMutexLocker lock(&mPendingResolvedIssueHashesMutex);
-    mPendingResolvedIssueHashes.insert(hash);
-}
-
-void StalledIssuesReceiver::flushPendingResolvedIssueHashes()
-{
-    QSet<size_t> pendingResolvedIssueHashes;
-    {
-        QMutexLocker lock(&mPendingResolvedIssueHashesMutex);
-        pendingResolvedIssueHashes.swap(mPendingResolvedIssueHashes);
-    }
-
-    for (auto it = pendingResolvedIssueHashes.cbegin(); it != pendingResolvedIssueHashes.cend();
-         ++it)
-    {
-        mIssueCreator.rememberResolvedIssueHash(*it);
-    }
+    mIssueCreator.setHashDiscardTracker(tracker);
 }
 
 void StalledIssuesReceiver::onRequestFinish(mega::MegaApi*, mega::MegaRequest* request, mega::MegaError*)
@@ -66,10 +51,7 @@ void StalledIssuesReceiver::onRequestFinish(mega::MegaApi*, mega::MegaRequest* r
             QMutexLocker lock(&mCacheMutex);
             mStalledIssues.clear();
             IgnoredStalledIssue::clearIgnoredSyncs();
-            flushPendingResolvedIssueHashes();
-
             mIssueCreator.createIssues(request->getMegaSyncStallMap(), mUpdateType);
-
             mStalledIssues = mIssueCreator.getStalledIssues();
             mUpdateRequests = 0;
         }
@@ -96,6 +78,7 @@ StalledIssuesModel::StalledIssuesModel():
     mIsStalled(false),
     mIsStalledChanged(false),
     mReceivedEmptyStalledIssuesCounter(0),
+    mHashDiscardTracker(std::make_shared<StalledIssueHashDiscardTracker>()),
     mRawInfoVisible(false)
 {
     mStalledIssuesThread = new QThread();
@@ -265,6 +248,8 @@ void StalledIssuesModel::needsUpdate()
 void StalledIssuesModel::onProcessStalledIssues(ReceivedStalledIssues issuesReceived,
                                                 UpdateType updateType)
 {
+    bool trackedFailedIssuesChanged(false);
+
     if(!issuesReceived.isEmpty() && !mEventTimer.isActive())
     {
         mEventTimer.start(EVENT_REQUEST_DELAY);
@@ -295,12 +280,24 @@ void StalledIssuesModel::onProcessStalledIssues(ReceivedStalledIssues issuesRece
         });
     };
 
+    if (!mFailedStalledIssues.isEmpty())
+    {
+        auto trackedFailedIssues(mFailedStalledIssues);
+
+        // Re-insert tracked failed issues
+        mHashDiscardTracker->keepTrackIssues(trackedFailedIssues);
+        trackedFailedIssuesChanged = trackedFailedIssues != mFailedStalledIssues;
+        mHashDiscardTracker->purgeExpired();
+        issuesReceived.failedAutoSolvedStalledIssues().append(trackedFailedIssues);
+    }
+
     if (!issuesReceived.isEmpty())
     {
         Utilities::queueFunctionInObjectThread(
             mStalledIssuesReceiver,
-            [this, issuesReceived, updateType, updateTimer]() mutable {
-                if (updateType == UpdateType::UI)
+            [this, issuesReceived, updateType, updateTimer, trackedFailedIssuesChanged]() mutable
+            {
+                if (updateType == UpdateType::UI || trackedFailedIssuesChanged)
                 {
                     reset();
                 }
@@ -340,7 +337,7 @@ void StalledIssuesModel::onProcessStalledIssues(ReceivedStalledIssues issuesRece
                 emit stalledIssuesCountChanged();
                 emit stalledIssuesChanged();
 
-                if (updateType == UpdateType::UI)
+                if (updateType == UpdateType::UI || trackedFailedIssuesChanged)
                 {
                     mIssuesRequested = false;
                     emit stalledIssuesReceived();
@@ -358,11 +355,15 @@ void StalledIssuesModel::onProcessStalledIssues(ReceivedStalledIssues issuesRece
     }
     else
     {
-        if (updateType == UpdateType::UI)
+        if (updateType == UpdateType::UI || trackedFailedIssuesChanged)
         {
-            // No issues, no items on the model, reset
             reset();
-            setIssuesRequested(false);
+
+            if (updateType == UpdateType::UI)
+            {
+                setIssuesRequested(false);
+            }
+
             emit stalledIssuesChanged();
             emit refreshFilter();
         }
@@ -456,6 +457,9 @@ void StalledIssuesModel::appendCachedIssuesToModel(
 
             mStalledIssues.append(issue);
             mStalledIssuesByOrder.insert(issue.consultData().get(), rowCount(QModelIndex()) - 1);
+
+            mHashDiscardTracker->track(issue.consultData().get(),
+                                       issue.consultData()->getIsSolved());
 
             if (type == StalledIssueFilterCriterion::ALL_ISSUES)
             {
@@ -551,6 +555,7 @@ void StalledIssuesModel::updateActiveStalledIssues()
 {
     if(!mIssuesRequested && !mSolvingIssues)
     {
+        prepareTrackedIssuesForUpdate();
         setIssuesRequested(true);
         emit updateStalledIssuesOnReceiver(UpdateType::UI);
     }
@@ -564,7 +569,18 @@ void StalledIssuesModel::setIssuesRequested(bool state)
 
 void StalledIssuesModel::updateStalledIssuesForAutoSolve()
 {
+    prepareTrackedIssuesForUpdate();
     emit updateStalledIssuesOnReceiver(UpdateType::AUTO_SOLVE);
+}
+
+void StalledIssuesModel::prepareTrackedIssuesForUpdate()
+{
+    if (!mFailedStalledIssues.isEmpty())
+    {
+        mHashDiscardTracker->prepareForNewRequest(mFailedStalledIssues);
+    }
+
+    mStalledIssuesReceiver->setHashDiscardTracker(mHashDiscardTracker);
 }
 
 void StalledIssuesModel::onNodesUpdate(mega::MegaApi*, mega::MegaNodeList* nodes)
@@ -1243,11 +1259,7 @@ bool StalledIssuesModel::issueSolved(const StalledIssue* issue)
 {
     if(issue && issue->isSolved() && !issue->isPotentiallySolved())
     {
-        const auto& originalStall = issue->getOriginalStall();
-        if (originalStall && issue->shouldDiscardReappearingIssuesByResolvedHash())
-        {
-            mStalledIssuesReceiver->rememberResolvedIssueHash(originalStall->getHash());
-        }
+        mHashDiscardTracker->track(issue, StalledIssue::SolveType::SOLVED);
 
         auto issueVariant(getIssueVariantByIssue(issue));
         if(issueVariant.isValid())
@@ -1273,6 +1285,8 @@ bool StalledIssuesModel::issueFailed(const StalledIssue* issue)
 {
     if(issue && issue->isFailed())
     {
+        mHashDiscardTracker->track(issue, StalledIssue::SolveType::FAILED);
+
         auto issueVariant(getIssueVariantByIssue(issue));
         if(issueVariant.isValid())
         {

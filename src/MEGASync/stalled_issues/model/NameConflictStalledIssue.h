@@ -544,8 +544,18 @@ public:
     bool renameNodesAutomatically();
 
     bool semiAutoSolveIssue(ActionsSelected option);
-    AutoSolveIssueResult autoSolveIssue() override;
+    SolveType autoSolveIssue() override;
     bool isAutoSolvable() const override;
+
+    HashDiscardRuleOpt hashDiscardRuleForState(SolveType type) const override
+    {
+        if (type == SolveType::FAILED)
+        {
+            return HashDiscardRule{std::nullopt};
+        }
+
+        return std::nullopt;
+    }
 
     bool hasDuplicatedNodes() const;
     bool areAllDuplicatedNodes() const;

@@ -11,7 +11,9 @@
 #include <QSharedData>
 #include <QSize>
 
+#include <chrono>
 #include <memory>
+#include <optional>
 
 enum class StalledIssueFilterCriterion
 {
@@ -334,16 +336,9 @@ public:
     SolveType getIsSolved() const {return mIsSolved;}
     virtual void setIsSolved(SolveType type);
 
-    enum class AutoSolveIssueResult
+    virtual SolveType autoSolveIssue()
     {
-        SOLVED,
-        ASYNC_SOLVED,
-        FAILED,
-    };
-
-    virtual AutoSolveIssueResult autoSolveIssue()
-    {
-        return AutoSolveIssueResult::FAILED;
+        return SolveType::FAILED;
     }
     virtual bool isAutoSolvable() const;
     bool isBeingSolvedByUpload(std::shared_ptr<UploadTransferInfo> info, bool isSourcePath) const;
@@ -404,11 +399,16 @@ public:
         return false;
     }
 
-    // If we receive an issue with the same hash just after solving it, discard it.
-    // By default, we don´t discard it, just reimplement this method to change the behaviour
-    virtual bool shouldDiscardReappearingIssuesByResolvedHash() const
+    struct HashDiscardRule
     {
-        return false;
+        std::optional<std::chrono::steady_clock::duration> discardDuration;
+    };
+
+    using HashDiscardRuleOpt = std::optional<HashDiscardRule>;
+
+    virtual HashDiscardRuleOpt hashDiscardRuleForState(SolveType) const
+    {
+        return std::nullopt;
     }
 
     bool wasAutoResolutionApplied() const;

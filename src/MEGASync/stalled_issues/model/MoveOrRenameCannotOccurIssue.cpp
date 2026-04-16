@@ -553,16 +553,16 @@ bool MoveOrRenameCannotOccurIssue::solveAttemptsAchieved() const
     return mSolveAttempts >= MAX_RETRIES;
 }
 
-StalledIssue::AutoSolveIssueResult MoveOrRenameCannotOccurIssue::autoSolveIssue()
+StalledIssue::SolveType MoveOrRenameCannotOccurIssue::autoSolveIssue()
 {
     auto chosenSide(getSyncIdChosenSide());
     if(isAutoSolvable() && !(chosenSide == MoveOrRenameIssueChosenSide::NONE))
     {
         solveIssue(chosenSide);
-        return StalledIssue::AutoSolveIssueResult::ASYNC_SOLVED;
+        return StalledIssue::SolveType::BEING_SOLVED;
     }
 
-    return StalledIssue::AutoSolveIssueResult::FAILED;
+    return StalledIssue::SolveType::FAILED;
 }
 
 bool MoveOrRenameCannotOccurIssue::isKeepSideAvailable(MoveOrRenameIssueChosenSide side) const

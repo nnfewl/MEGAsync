@@ -16,7 +16,7 @@ LocalOrRemoteUserMustChooseStalledIssue::LocalOrRemoteUserMustChooseStalledIssue
 {
 }
 
-StalledIssue::AutoSolveIssueResult LocalOrRemoteUserMustChooseStalledIssue::autoSolveIssue()
+StalledIssue::SolveType LocalOrRemoteUserMustChooseStalledIssue::autoSolveIssue()
 {
     setAutoResolutionApplied(true);
 
@@ -61,10 +61,10 @@ StalledIssue::AutoSolveIssueResult LocalOrRemoteUserMustChooseStalledIssue::auto
     {
         MegaSyncApp->getStatsEventHandler()->sendEvent(
             AppStatsEvents::EventType::SI_LOCALREMOTE_SOLVED_AUTOMATICALLY);
-        return StalledIssue::AutoSolveIssueResult::SOLVED;
+        return StalledIssue::SolveType::SOLVED;
     }
 
-    return StalledIssue::AutoSolveIssueResult::FAILED;
+    return StalledIssue::SolveType::FAILED;
 }
 
 bool LocalOrRemoteUserMustChooseStalledIssue::chooseLastMTimeSide()

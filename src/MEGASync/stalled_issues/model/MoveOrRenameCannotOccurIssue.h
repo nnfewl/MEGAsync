@@ -33,7 +33,7 @@ public:
     void setIsSolved(SolveType type) override;
     bool isAutoSolvable() const override;
     void solveIssue(MoveOrRenameIssueChosenSide side);
-    StalledIssue::AutoSolveIssueResult autoSolveIssue() override;
+    SolveType autoSolveIssue() override;
 
     bool isKeepSideAvailable(MoveOrRenameIssueChosenSide side) const;
 

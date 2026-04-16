@@ -117,10 +117,10 @@ bool IgnoredStalledIssue::checkForExternalChanges()
 }
 
 //Only for Symbolic, hard and special links
-StalledIssue::AutoSolveIssueResult IgnoredStalledIssue::autoSolveIssue()
+StalledIssue::SolveType IgnoredStalledIssue::autoSolveIssue()
 {
     setAutoResolutionApplied(true);
-    StalledIssue::AutoSolveIssueResult result(StalledIssue::AutoSolveIssueResult::FAILED);
+    StalledIssue::SolveType result(StalledIssue::SolveType::FAILED);
 
     if(!syncIds().isEmpty())
     {
@@ -166,7 +166,7 @@ StalledIssue::AutoSolveIssueResult IgnoredStalledIssue::autoSolveIssue()
                 auto changesApplied(ignoreManager.applyChanges());
                 if(changesApplied < MegaIgnoreManager::ApplyChangesError::NO_WRITE_PERMISSION)
                 {
-                    result = StalledIssue::AutoSolveIssueResult::SOLVED;
+                    result = StalledIssue::SolveType::SOLVED;
                 }
                 else
                 {
@@ -180,7 +180,7 @@ StalledIssue::AutoSolveIssueResult IgnoredStalledIssue::autoSolveIssue()
         //Only done for sym links
         else if(mSymLinksIgnoredInSyncs.value(syncId) == true)
         {
-            result = StalledIssue::AutoSolveIssueResult::SOLVED;
+            result = StalledIssue::SolveType::SOLVED;
         }
     }
 
