@@ -35,7 +35,7 @@ private slots:
 
 private:
     bool isDescriptionValid() const;
-    void updateDescriptionValidation(bool forceErrorMessage = false);
+    void setDescriptionErrorVisibility(bool visible);
     void closeProgressDialog();
     void openProgressDialog();
 

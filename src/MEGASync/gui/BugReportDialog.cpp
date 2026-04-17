@@ -28,7 +28,9 @@ BugReportDialog::BugReportDialog(QWidget* parent, MegaSyncLogger& logger):
     sizeP.setRetainSizeWhenHidden(true);
     ui->wDescriptionError->setSizePolicy(sizeP);
 
-    updateDescriptionValidation();
+    // By default, hidden
+    setDescriptionErrorVisibility(false);
+    ui->bClearDescription->setVisible(false);
 
     mController->attachLogToReport(ui->cbAttachLogs->isChecked());
 
@@ -216,7 +218,7 @@ void BugReportDialog::onSubmitClicked()
 {
     if (!isDescriptionValid())
     {
-        updateDescriptionValidation(true);
+        setDescriptionErrorVisibility(true);
         ui->teDescribeBug->setFocus();
         return;
     }
@@ -265,7 +267,15 @@ void BugReportDialog::onDescriptionChanged()
 {
     auto description(ui->teDescribeBug->toPlainText());
     mController->setReportDescription(description);
-    updateDescriptionValidation();
+
+    const auto hasUserInput = !description.isEmpty();
+    ui->bClearDescription->setVisible(hasUserInput);
+
+    // Hide the error if visible
+    if (ui->wDescriptionError->isVisible())
+    {
+        setDescriptionErrorVisibility(false);
+    }
 }
 
 void BugReportDialog::onTitleChanged()
@@ -284,19 +294,12 @@ bool BugReportDialog::isDescriptionValid() const
     return ui->teDescribeBug->toPlainText().trimmed().length() >= mMinDescriptionLength;
 }
 
-void BugReportDialog::updateDescriptionValidation(bool forceErrorMessage)
+void BugReportDialog::setDescriptionErrorVisibility(bool visible)
 {
-    const auto description = ui->teDescribeBug->toPlainText();
-    const auto hasUserInput = !description.isEmpty();
-    const auto descriptionValid = isDescriptionValid();
-    const auto showValidationError = !descriptionValid && (forceErrorMessage || hasUserInput);
-
-    // Clear button is hidden when text edit is empty
-    ui->bClearDescription->setVisible(hasUserInput);
-
-    ui->bSubmit->setEnabled(descriptionValid);
-    ui->wDescriptionError->setVisible(showValidationError);
-    ui->teDescribeBug->setProperty("error", showValidationError);
+    ui->wDescriptionError->setVisible(visible);
+    // While the error is visible, we disable the button as the submit would fail again
+    ui->bSubmit->setEnabled(!visible);
+    ui->teDescribeBug->setProperty("error", visible);
     ui->teDescribeBug->style()->unpolish(ui->teDescribeBug);
     ui->teDescribeBug->style()->polish(ui->teDescribeBug);
     ui->teDescribeBug->update();
