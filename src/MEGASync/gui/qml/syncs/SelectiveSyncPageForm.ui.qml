@@ -11,7 +11,7 @@ import components.texts 1.0
 import SyncInfo 1.0
 import ServiceUrls 1.0
 
-FocusScope {
+Item {
     id: root
 
     readonly property int textSpacings: 8
@@ -20,9 +20,7 @@ FocusScope {
     property alias remoteFolderChooser: remoteFolder
     property alias helpLink: helpLinkItem
 
-    // make this Item's implicit size = layout's implicit size
-    implicitWidth:  layoutItem.implicitWidth
-    implicitHeight: layoutItem.implicitHeight
+    implicitHeight: layoutItem.height
 
     ColumnLayout {
         id: layoutItem
@@ -71,8 +69,8 @@ FocusScope {
                 title: SyncsStrings.selectLocalFolder
                 leftIconSource: Images.pc
                 chosenPath: syncsDataAccess.defaultLocalFolder
-                Layout.preferredWidth: parent.width + 8
-                Layout.leftMargin: -4
+                Layout.preferredWidth: parent.width + 2 * Constants.focusBorderWidth
+                Layout.leftMargin: -Constants.focusBorderWidth
             }
 
             ChooseSyncFolder {
@@ -81,8 +79,8 @@ FocusScope {
                 title: SyncsStrings.selectMEGAFolder
                 leftIconSource: Images.megaOutline
                 chosenPath: syncsDataAccess.defaultRemoteFolder
-                Layout.preferredWidth: parent.width + 8
-                Layout.leftMargin: -4
+                Layout.preferredWidth: parent.width + 2 * Constants.focusBorderWidth
+                Layout.leftMargin: -Constants.focusBorderWidth
             }
         }
 

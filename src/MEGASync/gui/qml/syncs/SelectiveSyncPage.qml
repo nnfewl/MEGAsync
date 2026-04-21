@@ -18,39 +18,6 @@ SelectiveSyncPageForm {
     // added to avoid qml warning.
     function setInitialFocusPosition() { }
 
-    Timer
-    {
-        interval: 5000
-        repeat: true
-        running: true
-
-        property bool error : false
-
-        onTriggered:
-        {
-            if (!error)
-            {
-                root.localFolderChooser.folderField.hint.text = "errorfdsf fsdfsdf  fsdfsd sdf sfdf sdf sfsd sdfsd fsdf sdfsd fsdf d hint 2errorfdsf fsdfsdf  fsdfsd sdf sfdf sdf sfsd sdfsd fsdf sdfsd fsdf d hint 2"
-                root.localFolderChooser.folderField.hint.visible = true
-
-                root.remoteFolderChooser.folderField.hint.text = "errorfdsf fsdfsdf  fsdfsd sdf sfdf sdf sfsd sdfsd fsdf sdfsd fsdf d hint 2 errorfdsf fsdfsdf  fsdfsd sdf sfdf sdf sfsd sdfsd fsdf sdfsd fsdf d hint 2"
-                root.remoteFolderChooser.folderField.hint.visible = true
-
-                error = true
-            }
-            else
-            {
-                root.localFolderChooser.folderField.hint.text = ""
-                root.localFolderChooser.folderField.hint.visible = false
-
-                root.remoteFolderChooser.folderField.hint.text = ""
-                root.remoteFolderChooser.folderField.hint.visible = false
-
-                error = false
-            }
-        }
-    }
-
     signal selectiveSyncMoveToBack
     signal selectiveSyncMoveToSuccess
     signal fullSyncMoveToSuccess

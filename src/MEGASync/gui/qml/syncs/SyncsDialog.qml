@@ -69,7 +69,6 @@ SyncsQmlDialog {
             }
 
             implicitHeight: currentItem.implicitHeight
-            height: implicitHeight
 
             Component {
                 id: syncsFlowPage

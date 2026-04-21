@@ -42,8 +42,7 @@ Item {
             top: parent.top
         }
 
-        height: implicitHeight
-        implicitHeight: currentItem.height
+        implicitHeight: currentItem.implicitHeight
 
         onCurrentItemChanged: {
             currentItem.setInitialFocusPosition();
