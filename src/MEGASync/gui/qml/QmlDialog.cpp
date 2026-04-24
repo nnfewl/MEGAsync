@@ -114,7 +114,7 @@ void QmlDialog::onRequestPageFocus()
 
 void QmlDialog::placeAndRaise()
 {
-    QmlDialog::setFramePosition(DialogOpener::initialDialogPosition(frameGeometry().size()));
+    QmlDialog::setFramePosition(DialogOpener::initialDialogPosition(geometry().size()));
 
     // The following two lines are required by Windows (activate) and macOS (raise)
     QmlDialog::requestActivate();

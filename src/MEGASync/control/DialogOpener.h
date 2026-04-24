@@ -63,7 +63,6 @@ private:
         virtual bool isVisible() = 0;
         virtual bool isActive() = 0;
         virtual bool isParent(QObject* parent) = 0;
-        virtual QRect geometry() const = 0;
         virtual QRect frameGeometry() const = 0;
         virtual void applyCurrentTheme() = 0;
 
@@ -137,11 +136,6 @@ private:
         bool isParent(QObject* parent) override
         {
             return mDialog->parent() == parent;
-        }
-
-        QRect geometry() const override
-        {
-            return mDialog->geometry();
         }
 
         QRect frameGeometry() const override
@@ -585,7 +579,9 @@ private:
                     }
                     else
                     {
-                        dialog->move(initialDialogPosition(dialog->geometry().size()));
+                        auto pos(initialDialogPosition(dialog->geometry().size()));
+                        auto size(dialog->geometry().size());
+                        dialog->setGeometry(QRect(pos.x(), pos.y(), size.width(), size.height()));
                         dialog->show();
                     }
                 }

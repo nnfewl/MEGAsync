@@ -105,7 +105,6 @@ public:
     void showNormal();
     void setGeometry(const QRect &geometry);
     QRect geometry();
-    QRect frameGeometry();
     bool isMaximized();
     bool isMinimized();
     bool isVisible();
