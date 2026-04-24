@@ -1736,11 +1736,14 @@ QString Utilities::getCommonPath(const QString &path1, const QString &path2, boo
 const QString Utilities::getPlatformProps(const QString sourceStyleSheet)
 {
     QString prefix;
-#ifdef Q_OS_MAC
+#if defined(Q_OS_MACOS)
     prefix = QStringLiteral("/* macOS */\n"
                             "* { font-family: Inter; font-size: 36px;}\n");
+#elif defined(Q_OS_WIN)
+    prefix = QStringLiteral("/* Windows */\n"
+                            "* { font-family: Google Sans; }\n");
 #else
-    prefix = QStringLiteral("/* Linux and Windows */\n"
+    prefix = QStringLiteral("/* Linux */\n"
                             "* { font-family: Segoe UI; }\n");
 #endif
 
