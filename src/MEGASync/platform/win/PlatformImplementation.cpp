@@ -1977,14 +1977,23 @@ void PlatformImplementation::runPostAutoUpdateStep()
             {
                 LPCWSTR lpcwstr = reinterpret_cast<LPCWSTR>(dllPath.utf16());
 
-                typedef HRESULT(STDAPICALLTYPE * DllRegisterServerFunc)();
+                typedef HRESULT(STDAPICALLTYPE * ShellExtRegisterFunc)();
                 HMODULE hModule = LoadLibrary(lpcwstr);
-                FARPROC proc = GetProcAddress(hModule, "installSparsePackage");
-                if (proc)
+                if (hModule)
                 {
-                    DllRegisterServerFunc registerFunc =
-                        reinterpret_cast<DllRegisterServerFunc>(reinterpret_cast<void*>(proc));
-                    registerFunc();
+                    FARPROC proc = GetProcAddress(hModule, "installPostUpdateContextMenus");
+                    if (!proc)
+                    {
+                        proc = GetProcAddress(hModule, "installSparsePackage");
+                    }
+
+                    if (proc)
+                    {
+                        ShellExtRegisterFunc registerFunc =
+                            reinterpret_cast<ShellExtRegisterFunc>(reinterpret_cast<void*>(proc));
+                        registerFunc();
+                    }
+
                     FreeLibrary(hModule);
                 }
 
