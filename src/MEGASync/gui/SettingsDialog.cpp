@@ -43,113 +43,6 @@ static const QString SYNCS_TAB_MENU_LABEL_QSS =
     QString::fromLatin1("QLabel{ border-image: url(%1); }");
 static constexpr int NUMBER_OF_CLICKS_TO_DEBUG{5};
 
-namespace
-{
-QVariantMap buildUsageSegment(AccountStateQuickWidget::UsageSegmentType type,
-                              const QString& label,
-                              long long value,
-                              const QVariantList& children = QVariantList())
-{
-    QVariantMap segment;
-    segment.insert(QString::fromLatin1("type"), static_cast<int>(type));
-    segment.insert(QString::fromLatin1("label"), label);
-    segment.insert(QString::fromLatin1("value"), QVariant::fromValue(value));
-    segment.insert(QString::fromLatin1("sizeText"), Utilities::getSizeString(value));
-    if (!children.isEmpty())
-    {
-        segment.insert(QString::fromLatin1("children"), children);
-    }
-    return segment;
-}
-
-void appendUsageSegment(QVariantList& segments,
-                        AccountStateQuickWidget::UsageSegmentType type,
-                        const QString& label,
-                        long long value)
-{
-    if (value <= 0)
-    {
-        return;
-    }
-
-    segments.push_back(buildUsageSegment(type, label, value));
-}
-
-QVariantList buildStorageSegments(Preferences* preferences)
-{
-    const auto cloudDriveStorage = preferences->cloudDriveStorage();
-    const auto versionsStorage = preferences->versionsStorage();
-    const auto availableStorage =
-        std::max(0ll, preferences->totalStorage() - preferences->usedStorage());
-
-    QVariantList segments;
-    if (cloudDriveStorage > 0 || versionsStorage > 0)
-    {
-        QVariantList children;
-        appendUsageSegment(children,
-                           AccountStateQuickWidget::Versions,
-                           QCoreApplication::translate("SettingsDialog", "Versions"),
-                           versionsStorage);
-
-        auto cloudDriveSegment =
-            buildUsageSegment(AccountStateQuickWidget::CloudDrive,
-                              QCoreApplication::translate("SettingsDialog", "Cloud Drive"),
-                              cloudDriveStorage + versionsStorage,
-                              children);
-        segments.push_back(cloudDriveSegment);
-    }
-    appendUsageSegment(segments,
-                       AccountStateQuickWidget::Backups,
-                       QCoreApplication::translate("SettingsDialog", "Backups"),
-                       preferences->vaultStorage());
-    appendUsageSegment(segments,
-                       AccountStateQuickWidget::RubbishBin,
-                       QCoreApplication::translate("SettingsDialog", "Rubbish Bin"),
-                       preferences->rubbishStorage());
-    appendUsageSegment(segments,
-                       AccountStateQuickWidget::Free,
-                       QLatin1String("Available"),
-                       availableStorage);
-    return segments;
-}
-
-QVariantList buildTransferSegments(Preferences* preferences)
-{
-    QVariantList segments;
-    appendUsageSegment(segments,
-                       AccountStateQuickWidget::Downloads,
-                       QCoreApplication::translate("SettingsDialog", "Downloads"),
-                       preferences->usedBandwidth());
-
-    const auto totalBandwidth = preferences->totalBandwidth();
-    if (totalBandwidth > 0)
-    {
-        const auto availableBandwidth =
-            std::max(0ll, totalBandwidth - preferences->usedBandwidth());
-        appendUsageSegment(segments,
-                           AccountStateQuickWidget::Free,
-                           QCoreApplication::translate("SettingsDialog", "Available"),
-                           availableBandwidth);
-    }
-    return segments;
-}
-
-AccountStateQuickWidget::ProgressState quotaStateToProgressState(QuotaState quotaState)
-{
-    switch (quotaState)
-    {
-        case QuotaState::WARNING:
-            return AccountStateQuickWidget::WARNING;
-        case QuotaState::OVERQUOTA:
-        case QuotaState::FULL:
-            return AccountStateQuickWidget::FULL;
-        case QuotaState::OK:
-        default:
-            return AccountStateQuickWidget::OK;
-    }
-}
-}
-
 long long calculateCacheSize()
 {
     long long cacheSize = 0;
@@ -235,8 +128,8 @@ SettingsDialog::SettingsDialog(MegaApplication* app, bool proxyOnly, QWidget* pa
     mUi->lCacheTitle->setText(mUi->lCacheTitle->text().arg(QString::fromUtf8(MEGA_DEBRIS_FOLDER)));
 
 #ifdef Q_OS_LINUX
-    // mUi->bUpdate->hide();
-    // mUi->cAutoUpdate->hide();
+    mUi->bUpdate->hide();
+    mUi->cAutoUpdate->hide();
 #endif
 
     mUi->cDesktopIntegration->hide();
@@ -660,7 +553,7 @@ void SettingsDialog::on_bGeneral_clicked()
 void SettingsDialog::on_bClearCache_clicked()
 {
     QString syncs;
-    for (auto syncSetting: mModel->getAllSyncSettings())
+    for (const auto& syncSetting: mModel->getAllSyncSettings())
     {
         QFileInfo fi(syncSetting->getLocalFolder() + QDir::separator() +
                      QString::fromUtf8(MEGA_DEBRIS_FOLDER));
@@ -688,7 +581,7 @@ void SettingsDialog::on_bClearCache_clicked()
     {
         if (msg->result() == QMessageBox::Yes)
         {
-            QtConcurrent::run(deleteCache);
+            QThreadPool::globalInstance()->start(deleteCache);
             mCacheSize = 0;
             onCacheSizeAvailable();
         }
@@ -954,7 +847,7 @@ void SettingsDialog::on_cDesktopIntegration_toggled(bool checked)
     // 1. Toggle left pane sync shortcuts in the explorer
     if (checked)
     {
-        for (auto syncSetting: mModel->getAllSyncSettings())
+        for (const auto& syncSetting: mModel->getAllSyncSettings())
         {
             Platform::getInstance()->addSyncToLeftPane(syncSetting->getLocalFolder(),
                                                        syncSetting->name(),
@@ -1032,119 +925,13 @@ void SettingsDialog::onCacheSizeAvailable()
 // Account -----------------------------------------------------------------------------------------
 void SettingsDialog::updateStorageElements()
 {
-    auto totalStorage = mPreferences->totalStorage();
-    auto usedStorage = mPreferences->usedStorage();
-    const auto availableStorage = std::max(0ll, totalStorage - usedStorage);
-    QString storageSummary;
-    QString availableText;
-    int percentage = 0;
-    auto state = AccountStateQuickWidget::OK;
-    const auto segments = buildStorageSegments(mPreferences.get());
-    const auto isBusinessAccount = Utilities::isBusinessAccount();
-
-    if (totalStorage == 0)
-    {
-        storageSummary = tr("Data temporarily unavailable");
-    }
-    else
-    {
-        if (isBusinessAccount)
-        {
-            storageSummary = Utilities::createSimpleUsedString(usedStorage);
-            percentage = 100;
-        }
-        else
-        {
-            percentage = Utilities::partPer(usedStorage, totalStorage);
-            state = storageProgressState();
-            storageSummary =
-                Utilities::createCompleteUsedString(usedStorage, totalStorage, percentage);
-            availableText = Utilities::getSizeString(availableStorage);
-        }
-    }
-
-    mAccountStateQuickWidget->setStorageData(storageSummary,
-                                             availableText,
-                                             percentage,
-                                             state,
-                                             segments,
-                                             isBusinessAccount && totalStorage > 0);
+    mAccountStateQuickWidget->updateStorageData();
 }
 
 void SettingsDialog::updateBandwidthElements()
 {
-    int accountType = mPreferences->accountType();
-    auto totalBandwidth = mPreferences->totalBandwidth();
-    auto usedBandwidth = mPreferences->usedBandwidth();
-    const auto availableBandwidth = std::max(0ll, totalBandwidth - usedBandwidth);
-    QString transferSummary;
-    QString availableText;
-    int percentage = 0;
-    auto state = AccountStateQuickWidget::OK;
-    const auto segments = buildTransferSegments(mPreferences.get());
     const auto quotaState = MegaSyncApp->getTransferQuota()->quotaState();
-    const auto isBusinessAccount = Utilities::isBusinessAccount();
-    QString transferValueText;
-
-    if (accountType == Preferences::ACCOUNT_TYPE_FREE)
-    {
-        transferSummary =
-            tr("Used quota for the last %n hour: %1", "", mPreferences->bandwidthInterval())
-                .arg(Utilities::getSizeString(usedBandwidth));
-    }
-    else if (isBusinessAccount)
-    {
-        transferValueText = Utilities::getSizeString(usedBandwidth);
-    }
-    else
-    {
-        if (totalBandwidth == 0)
-        {
-            transferSummary = tr("Data temporarily unavailable");
-        }
-        else
-        {
-            percentage = Utilities::partPer(usedBandwidth, totalBandwidth);
-            state = quotaStateToProgressState(quotaState);
-            transferSummary = Utilities::createCompleteUsedString(usedBandwidth,
-                                                                  totalBandwidth,
-                                                                  std::min(percentage, 100));
-            availableText = Utilities::getSizeString(availableBandwidth);
-        }
-    }
-
-    mAccountStateQuickWidget->setTransferData(transferSummary,
-                                              availableText,
-                                              percentage,
-                                              state,
-                                              segments,
-                                              isBusinessAccount,
-                                              transferValueText);
-}
-
-AccountStateQuickWidget::ProgressState SettingsDialog::storageProgressState() const
-{
-    switch (mPreferences->getStorageState())
-    {
-        case MegaApi::STORAGE_STATE_PAYWALL:
-        // Fallthrough
-        case MegaApi::STORAGE_STATE_RED:
-        {
-            return AccountStateQuickWidget::FULL;
-        }
-        case MegaApi::STORAGE_STATE_ORANGE:
-        {
-            return AccountStateQuickWidget::WARNING;
-        }
-        case MegaApi::STORAGE_STATE_UNKNOWN:
-        // Fallthrough
-        case MegaApi::STORAGE_STATE_GREEN:
-        // Fallthrough
-        default:
-        {
-            return AccountStateQuickWidget::OK;
-        }
-    }
+    mAccountStateQuickWidget->updateTransferData(quotaState);
 }
 
 void SettingsDialog::updateAccountElements()

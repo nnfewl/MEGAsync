@@ -42,7 +42,11 @@ Rectangle {
                         Math.max(minimumWidth, proportionalWidth))
     }
 
+    // TODO: Remove these corner-hiding helper rectangles when we move to Qt 6,
+    // which supports setting the radius per corner directly.
     Rectangle {
+        id: hidesRightProgressBarRoundedCorners
+
         anchors {
             top: parent.top
             right: parent.right
@@ -58,6 +62,8 @@ Rectangle {
     }
 
     Rectangle {
+        id: hidesLeftProgressBarRoundedCorners
+
         anchors {
             left: parent.left
             top: parent.top
@@ -101,6 +107,8 @@ Rectangle {
         clip: true
 
         Rectangle {
+            id: childOverlayFill
+
             anchors.fill: parent
             color: root.childSegmentFillColor && root.childSegment
                    ? root.childSegmentFillColor(root.childSegment)
@@ -115,6 +123,8 @@ Rectangle {
             enabled: root.childTooltipText.length > 0
 
             QuotaProgressToolTip {
+                id: childSegmentToolTip
+
                 visible: parent.containsMouse && parent.enabled
                 text: root.childTooltipText
                 anchorItem: childOverlayContainer
@@ -129,6 +139,8 @@ Rectangle {
         hoverEnabled: true
 
         QuotaProgressToolTip {
+            id: parentSegmentToolTip
+
             visible: parent.containsMouse
                      && (!childOverlayContainer.visible || !childMouseArea.containsMouse)
             text: root.tooltipText

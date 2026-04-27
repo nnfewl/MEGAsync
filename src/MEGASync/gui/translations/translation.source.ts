@@ -7015,11 +7015,6 @@ Do you want to delete it anyway?</translation>
         <translation>Clear remote backup</translation>
     </message>
     <message>
-        <source>Data temporarily unavailable</source>
-        <translatorcomment>Label to indicate that the usage data is temporarily unavailable. String as short as possible.</translatorcomment>
-        <translation>Data temporarily unavailable</translation>
-    </message>
-    <message>
         <source>Default Folders</source>
         <translatorcomment>Section title text for Upload and Download folder defaults in Folders pane.</translatorcomment>
         <translation>Default folders</translation>
@@ -7323,31 +7318,6 @@ Do you want to delete it anyway?</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Cloud Drive</source>
-        <translatorcomment>Label for Cloud Drive usage shown in the Account pane breakdown legend. Maintain capital letters. DSN-2975</translatorcomment>
-        <translation type="unfinished">Cloud drive</translation>
-    </message>
-    <message>
-        <source>Backups</source>
-        <translatorcomment>Label for Backups usage shown in the Account pane breakdown legend. Maintain capital letter in first word. DSN-2975</translatorcomment>
-        <translation type="unfinished">Backups</translation>
-    </message>
-    <message>
-        <source>Rubbish Bin</source>
-        <translatorcomment>Label for Rubbish Bin usage shown in the Account pane breakdown legend. Maintain capital letters. DSN-2975</translatorcomment>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Versions</source>
-        <translatorcomment>Label for file version usage shown in the Account pane breakdown legend. Maintain capital letter in first word. DSN-2975</translatorcomment>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Downloads</source>
-        <translatorcomment>Label for Downloads usage shown in the Account pane transfer breakdown legend. Maintain capital letter in first word. DSN-2975</translatorcomment>
-        <translation type="unfinished">Downloads</translation>
-    </message>
-    <message>
         <source>Permissions for new folders and files</source>
         <translatorcomment>Section title for the file and folder permissions settings in File Management pane. DSN-2978</translatorcomment>
         <translation type="unfinished">Permissions for new folders and files</translation>
@@ -7412,13 +7382,6 @@ Do you want to delete it anyway?</translation>
         <translatorcomment>Button label that opens the About MEGA dialog from the Settings window footer. Keep as short as possible. DSN-2976</translatorcomment>
         <translation type="unfinished">About MEGA</translation>
     </message>
-    <message numerus="yes">
-        <source>Used quota for the last %n hour: %1</source>
-        <translation type="unfinished">
-            <numerusform></numerusform>
-            <numerusform></numerusform>
-        </translation>
-    </message>
 </context>
 <context>
     <name>SettingsDialog_Proxies</name>
@@ -7471,6 +7434,31 @@ Do you want to delete it anyway?</translation>
         <translation type="unfinished">Data temporarily unavailable</translation>
     </message>
     <message>
+        <source>Cloud Drive</source>
+        <translatorcomment>Legend label shown in the Account pane usage bar for the Cloud Drive segment. Keep as short as possible. DSN-2975</translatorcomment>
+        <translation type="unfinished">Cloud drive</translation>
+    </message>
+    <message>
+        <source>Backups</source>
+        <translatorcomment>Legend label shown in the Account pane usage bar for the Backups segment. Keep as short as possible. DSN-2975</translatorcomment>
+        <translation type="unfinished">Backups</translation>
+    </message>
+    <message>
+        <source>Versions</source>
+        <translatorcomment>Legend label shown in the Account pane usage bar for the Versions segment. Keep as short as possible. DSN-2975</translatorcomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Available</source>
+        <translatorcomment>Legend label shown in the Account pane usage bar for the remaining available segment. Keep as short as possible. DSN-2975</translatorcomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Rubbish Bin</source>
+        <translatorcomment>Legend label shown in the Account pane usage bar for the Rubbish Bin segment. Keep as short as possible. DSN-2975</translatorcomment>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Cloud Drive[BR]%1</source>
         <translatorcomment>Tooltip text shown when hovering the Cloud Drive segment in the Account pane usage bar. Keep the [BR] line break tag. %1 will be replaced with the storage amount. DSN-2975</translatorcomment>
         <translation type="unfinished"></translation>
@@ -7496,8 +7484,8 @@ Do you want to delete it anyway?</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Downloads[BR]%1</source>
-        <translatorcomment>Tooltip text shown when hovering the Downloads segment in the Account pane usage bar. Keep the [BR] line break tag. %1 will be replaced with the transfer amount. DSN-2975</translatorcomment>
+        <source>Transfers[BR]%1</source>
+        <translatorcomment>Tooltip text shown when hovering the Transfers segment in the Account pane usage bar. Keep the [BR] line break tag. %1 will be replaced with the transfer amount. DSN-2975</translatorcomment>
         <translation type="unfinished"></translation>
     </message>
 </context>

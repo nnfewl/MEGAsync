@@ -162,7 +162,6 @@ private:
     void updateCacheSchedulerDaysLabel();
     void setGeneralTabEnabled(const bool enabled);
     void setOverlayCheckboxEnabled(const bool enabled, const bool checked);
-    AccountStateQuickWidget::ProgressState storageProgressState() const;
     void startRequestTaskbarPinningTimer();
     void initColorTheme();
     void onEmailClicked();

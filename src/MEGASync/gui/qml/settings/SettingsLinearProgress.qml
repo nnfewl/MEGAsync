@@ -15,14 +15,15 @@ Item {
     property var segments: []
     property bool showLegend: true
 
-    property int defaultMargin: 12
-    property int tightSpacing: 2
-    property int smallSpacing: 4
-    property int compactSpacing: 8
-    property int defaultIconSize: 16
-    property int bannerTextPixelSize: 12
-    property int bannerTextLineHeight: 18
-    property int minVisibleSegmentWidth: 4
+    readonly property int defaultMargin: 12
+    readonly property int tightSpacing: 2
+    readonly property int smallSpacing: 4
+    readonly property int compactSpacing: 8
+    readonly property int defaultIconSize: 16
+    readonly property real legendDotSize: 7.5
+    readonly property int bannerTextPixelSize: 12
+    readonly property int bannerTextLineHeight: 18
+    readonly property int minVisibleSegmentWidth: 4
     
     signal bannerActionClicked()
 
@@ -148,13 +149,32 @@ Item {
         return legend
     }
 
+    function labelForSegmentType(type) {
+        switch (type) {
+        case AccountStateQuickWidget.CloudDrive:
+            return SettingsStrings.cloudDriveLabel
+        case AccountStateQuickWidget.Backups:
+            return SettingsStrings.backupsLabel
+        case AccountStateQuickWidget.Versions:
+            return SettingsStrings.versionsLabel
+        case AccountStateQuickWidget.Free:
+            return SettingsStrings.availableLabel
+        case AccountStateQuickWidget.RubbishBin:
+            return SettingsStrings.rubbishBinLabel
+        case AccountStateQuickWidget.Downloads:
+            return SettingsStrings.downloadsLabel
+        default:
+            return ""
+        }
+    }
+
     function tooltipTextForSegment(segment) {
         if (!segment) {
             return ""
         }
 
         const type = Number(segment.type)
-        const label = segment.label || ""
+        const label = root.labelForSegmentType(type)
         const sizeText = segment.sizeText || ""
 
         if (sizeText.length > 0) {
@@ -260,15 +280,15 @@ Item {
                             Item {
                                 id: legendDotContainer
 
-                                implicitWidth: 16
-                                implicitHeight: 16
+                                implicitWidth: root.defaultIconSize
+                                implicitHeight: root.defaultIconSize
 
                                 Rectangle {
                                     id: legendDot
 
                                     anchors.centerIn: parent
-                                    width: 7.5
-                                    height: 7.5
+                                    width: root.legendDotSize
+                                    height: root.legendDotSize
                                     radius: width / 2
                                     color: root.segmentFillColor(modelData)
                                 }
@@ -277,12 +297,12 @@ Item {
                             Texts.Text {
                                 id: legendText
 
-                                text: modelData.label
+                                text: root.labelForSegmentType(Number(modelData.type))
                                 font.pixelSize: 10
                                 font.weight: Font.DemiBold
                                 lineHeight: 16
                                 lineHeightMode: Text.FixedHeight
-                                color: ColorTheme.textSecondary
+                                color: ColorTheme.textPrimary
                                 renderType: Text.NativeRendering // Avoids the slightly blurred text appearance from default QML rendering in embedded QQuickWidget content.
                             }
                         }

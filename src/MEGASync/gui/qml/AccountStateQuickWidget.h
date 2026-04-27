@@ -2,6 +2,7 @@
 #define ACCOUNTSTATEQUICKWIDGET_H
 
 #include "MegaQuickWidget.h"
+#include "TransferQuota.h"
 
 #include <QVariantList>
 
@@ -72,6 +73,8 @@ public:
 
     void setShowStorageCard(bool showStorageCard);
     void setShowTransferCard(bool showTransferCard);
+    void updateStorageData();
+    void updateTransferData(QuotaState quotaState);
     void setStorageData(const QString& summary,
                         const QString& freeText,
                         int percentage,

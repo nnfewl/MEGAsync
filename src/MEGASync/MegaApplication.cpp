@@ -3480,7 +3480,7 @@ void MegaApplication::showSyncIssueMessage(DesktopNotifications::NotificationInf
 
     if (mOsNotifications)
     {
-#ifdef __APPLE__
+#ifdef Q_OS_MACOS
         Utilities::queueFunctionInAppThread(
             [this]()
             {
@@ -3544,7 +3544,7 @@ void MegaApplication::showErrorMessage(QString message, QString title)
     MegaApi::log(MegaApi::LOG_LEVEL_ERROR, message.toUtf8().constData());
     if (mOsNotifications)
     {
-#ifdef __APPLE__
+#ifdef Q_OS_MACOS
         if (infoDialog && infoDialog->isVisible())
         {
             infoDialog->hide();
