@@ -219,13 +219,11 @@ QString AccountStateQuickWidget::transferValueText() const
 
 void AccountStateQuickWidget::setShowStorageCard(bool showStorageCard)
 {
-    if (mShowStorageCard == showStorageCard)
+    if (mShowStorageCard != showStorageCard)
     {
-        return;
+        mShowStorageCard = showStorageCard;
+        emit showStorageCardChanged();
     }
-
-    mShowStorageCard = showStorageCard;
-    emit showStorageCardChanged();
 }
 
 void AccountStateQuickWidget::setShowTransferCard(bool showTransferCard)

@@ -294,24 +294,6 @@ color: #ff797c80; /*colorToken.text-disabled*/
 }
 
 /*
-    QGroupBox topLine type - for debugging
-*/
-QGroupBox[type="topLine"]
-{
-border-color: #ffd8d9db; /*colorToken.border-strong*/
-}
-
-QGroupBox::title[type="topLine"]
-{
-color: #ff04101E; /*colorToken.text-accent*/
-}
-
-QGroupBox::title:disabled[type="topLine"]
-{
-color: #ff797c80; /*colorToken.text-disabled*/
-}
-
-/*
     QProgressBar
 */
 QProgressBar
