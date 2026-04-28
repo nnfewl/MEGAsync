@@ -420,13 +420,15 @@ bool gCrashableForTesting = false;
 
 void MegaApplication::addFont(const QString& fontPath)
 {
-    auto fontId = QFontDatabase::addApplicationFont(fontPath);
+    const auto fontId = QFontDatabase::addApplicationFont(fontPath);
 #if defined(DEBUG)
     if (fontId == -1)
     {
-        throw new std::runtime_error(
+        throw std::runtime_error(
             QString::fromUtf8("couldn't load the font : %0").arg(fontPath).toStdString());
     }
+#else
+    Q_UNUSED(fontId);
 #endif
 }
 
