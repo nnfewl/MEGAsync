@@ -12,7 +12,6 @@
 #include <QMessageBox>
 #include <QPointer>
 #include <QQueue>
-#include <QScreen>
 #include <QWindow>
 
 #include <functional>
@@ -167,25 +166,7 @@ private:
 public:
     static QPoint initialDialogPosition(const QSize& dialogSize)
     {
-        auto primaryScreen = QGuiApplication::primaryScreen();
-        if (!primaryScreen)
-        {
-            return QPoint();
-        }
-
-        const auto primaryGeometry = primaryScreen->geometry();
-
-#ifdef Q_OS_LINUX
-        constexpr double CENTERING_FACTOR(0.5);
-        int xPos(primaryGeometry.x() + static_cast<int>(primaryGeometry.width() CENTERING_FACTOR -
-                                                        dialogSize.width() CENTERING_FACTOR));
-        int yPos(primaryGeometry.y() + static_cast<int>(primaryGeometry.height() CENTERING_FACTOR -
-                                                        dialogSize.height() CENTERING_FACTOR));
-        return QPoint(xPos, yPos);
-#else
-        return QPoint(primaryGeometry.x() + (primaryGeometry.width() - dialogSize.width()) / 2,
-                      primaryGeometry.y() + (primaryGeometry.height() - dialogSize.height()) / 2);
-#endif
+        return Platform::getInstance()->initialDialogPosition(dialogSize);
     }
 
     template <class DialogType>
