@@ -1,6 +1,7 @@
 #include "NodeSelectorModel.h"
 
 #include "CameraUploadFolder.h"
+#include "DuplicatedNodeConflictAutoResolution.h"
 #include "IconTokenizer.h"
 #include "MegaApplication.h"
 #include "MegaNodeNames.h"
@@ -1432,10 +1433,14 @@ bool NodeSelectorModel::processNodesAndCheckConflicts(
 
     if (type == MoveActionType::COPY)
     {
-        conflicts->autoRenameFolderConflictsForCopy();
+        DuplicatedNodeConflictAutoResolution::resolveFolderConflictsForCopy(conflicts);
     }
 
-    if (!conflicts->hasNoConflicts())
+    if (conflicts->isConflictFree())
+    {
+        processNodesAfterConflictCheck(conflicts, type);
+    }
+    else
     {
         if (!handleAndTarget.isEmpty())
         {
@@ -1443,10 +1448,6 @@ bool NodeSelectorModel::processNodesAndCheckConflicts(
         }
 
         emit showDuplicatedNodeDialog(conflicts, type);
-    }
-    else
-    {
-        processNodesAfterConflictCheck(conflicts, type);
     }
 
     return true;
