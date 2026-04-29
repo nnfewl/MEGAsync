@@ -10,6 +10,7 @@ namespace
 {
 const QLatin1String DEFAULT_RES_MEGA_ICON(":/images/app_ico.ico");
 const QLatin1String DEFAULT_TITLE("MEGA");
+const qreal HIDDEN_OPACITY(0.0);
 }
 
 QmlDialog::QmlDialog(QWindow* parent):
@@ -60,6 +61,10 @@ void QmlDialog::readyToBeShow()
     mTrackedSize = geometry().size();
 
     hide();
+    // Set the opacity to 0.0 to hide the window even if it is shown
+    // The opacity will be set again to the real opacity
+    mPreviousOpacity = opacity();
+    setOpacity(HIDDEN_OPACITY);
     show();
 }
 
@@ -87,6 +92,16 @@ bool QmlDialog::event(QEvent* event)
     else if (event->type() == QEvent::Resize)
     {
         auto* resizeEvent = static_cast<QResizeEvent*>(event);
+
+#ifdef Q_OS_LINUX
+        // Linux qml dialogs starts with QSize(1,1), so the first resize is invalid
+        if (mTrackedSize.height() <= 1)
+        {
+            mTrackedSize = resizeEvent->size();
+            return QQuickWindow::event(event);
+        }
+#endif
+
         if (resizeEvent && mCenterAndRaiseAfterFirstHeightChangeEvent &&
             mTrackedSize != resizeEvent->size())
         {
@@ -115,6 +130,8 @@ void QmlDialog::onRequestPageFocus()
 void QmlDialog::placeAndRaise()
 {
     QmlDialog::setFramePosition(DialogOpener::initialDialogPosition(geometry().size()));
+    // Now that the dialog is finally centered, show it (using the opacity)
+    setOpacity(mPreviousOpacity);
 
     // The following two lines are required by Windows (activate) and macOS (raise)
     QmlDialog::requestActivate();
