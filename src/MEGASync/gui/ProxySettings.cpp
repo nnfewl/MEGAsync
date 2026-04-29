@@ -21,11 +21,6 @@ ProxySettings::ProxySettings(MegaApplication* app, QWidget* parent):
 
     mUi->eProxyPort->setValidator(new QIntValidator(0, std::numeric_limits<uint16_t>::max(), this));
 
-    mProxyAuto = new QRadioButton(this);
-    mProxyAuto->setText(tr("Auto-detect"));
-    mProxyAuto->setCursor(Qt::PointingHandCursor);
-    mUi->verticalLayout->addWidget(mProxyAuto);
-
     mUi->wErrorBanner->setType(BannerWidget::Type::BANNER_ERROR);
 
     initialize();
@@ -52,7 +47,7 @@ ProxySettings::ProxySettings(MegaApplication* app, QWidget* parent):
             {
                 setManualMode(false);
             });
-    connect(mProxyAuto,
+    connect(mUi->rProxyAuto,
             &QRadioButton::clicked,
             this,
             [this]
@@ -87,7 +82,7 @@ ProxySettings::~ProxySettings()
 void ProxySettings::initialize()
 {
     mUi->rNoProxy->setChecked(mPreferences->proxyType() == Preferences::PROXY_TYPE_NONE);
-    mProxyAuto->setChecked(mPreferences->proxyType() == Preferences::PROXY_TYPE_AUTO);
+    mUi->rProxyAuto->setChecked(mPreferences->proxyType() == Preferences::PROXY_TYPE_AUTO);
     mUi->rProxyManual->setChecked(mPreferences->proxyType() == Preferences::PROXY_TYPE_CUSTOM);
     mUi->cProxyType->setCurrentIndex(mPreferences->proxyProtocol());
     mUi->eProxyServer->setText(mPreferences->proxyServer());
@@ -135,7 +130,7 @@ void ProxySettings::onProxyTestFinished(bool success)
         {
             mPreferences->setProxyType(Preferences::PROXY_TYPE_NONE);
         }
-        else if (mProxyAuto->isChecked())
+        else if (mUi->rProxyAuto->isChecked())
         {
             mPreferences->setProxyType(Preferences::PROXY_TYPE_AUTO);
         }
@@ -197,7 +192,7 @@ void ProxySettings::on_bUpdate_clicked()
             proxy.setPassword(mUi->eProxyPassword->text());
         }
     }
-    else if (mProxyAuto->isChecked())
+    else if (mUi->rProxyAuto->isChecked())
     {
         std::unique_ptr<MegaProxy> proxySettings(mApp->getMegaApi()->getAutoProxySettings());
         if (proxySettings->getProxyType() == MegaProxy::PROXY_CUSTOM)

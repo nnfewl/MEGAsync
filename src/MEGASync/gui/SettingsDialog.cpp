@@ -129,13 +129,13 @@ SettingsDialog::SettingsDialog(MegaApplication* app, bool proxyOnly, QWidget* pa
 
 #ifdef Q_OS_LINUX
     mUi->bUpdate->hide();
-    mUi->cAutoUpdate->hide();
+    mUi->wAutoUpdateContainer->hide();
 #endif
 
-    mUi->cDesktopIntegration->hide();
+    mUi->wDesktopIntegrationContainer->hide();
 
 #ifdef Q_OS_WINDOWS
-    mUi->cDesktopIntegration->show();
+    mUi->wDesktopIntegrationContainer->show();
 #endif
 
 #ifdef Q_OS_MACOS

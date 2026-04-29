@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>448</width>
-    <height>493</height>
+    <height>542</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -109,20 +109,20 @@
           <height>30</height>
          </size>
         </property>
-        <property name="font-size" stdset="0">
-         <string notr="true">subtitle</string>
-        </property>
-        <property name="semibold" stdset="0">
-         <bool>true</bool>
-        </property>
-        <property name="indent">
-         <number>12</number>
-        </property>
         <property name="text">
          <string>Proxy</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+        <property name="indent">
+         <number>12</number>
+        </property>
+        <property name="font-size" stdset="0">
+         <string notr="true">subtitle</string>
+        </property>
+        <property name="semibold" stdset="0">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -220,6 +220,18 @@
              </property>
              <item>
               <widget class="QRadioButton" name="rNoProxy">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>20</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>20</height>
+                </size>
+               </property>
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -232,7 +244,44 @@
               </widget>
              </item>
              <item>
+              <widget class="QRadioButton" name="rProxyAuto">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>20</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>20</height>
+                </size>
+               </property>
+               <property name="cursor">
+                <cursorShape>PointingHandCursor</cursorShape>
+               </property>
+               <property name="focusPolicy">
+                <enum>Qt::StrongFocus</enum>
+               </property>
+               <property name="text">
+                <string>Auto-detect</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QRadioButton" name="rProxyManual">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>20</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>20</height>
+                </size>
+               </property>
                <property name="cursor">
                 <cursorShape>PointingHandCursor</cursorShape>
                </property>
@@ -541,6 +590,9 @@
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
              <property name="sizeHint" stdset="0">
               <size>
                <width>142</width>
@@ -550,33 +602,41 @@
             </spacer>
            </item>
            <item>
-            <widget class="QCheckBox" name="cProxyRequiresPassword">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="cursor">
-              <cursorShape>PointingHandCursor</cursorShape>
-             </property>
-             <property name="text">
-              <string>Proxy server requires a password</string>
-             </property>
-             <property name="type" stdset="0">
-              <string notr="true">mega</string>
-             </property>
+            <widget class="QWidget" name="hProxyRequiresPasswordContainer_2" native="true">
+             <layout class="QHBoxLayout" name="hProxyRequiresPasswordContainer">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QCheckBox" name="cProxyRequiresPassword">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
+                <property name="text">
+                 <string>Proxy server requires a password</string>
+                </property>
+                <property name="type" stdset="0">
+                 <string notr="true">mega</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </widget>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer_password_toggle">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>0</width>
-               <height>0</height>
-              </size>
-             </property>
-            </spacer>
            </item>
           </layout>
          </item>
@@ -843,6 +903,7 @@
  </customwidgets>
  <tabstops>
   <tabstop>rNoProxy</tabstop>
+  <tabstop>rProxyAuto</tabstop>
   <tabstop>rProxyManual</tabstop>
   <tabstop>cProxyType</tabstop>
   <tabstop>cProxyRequiresPassword</tabstop>
