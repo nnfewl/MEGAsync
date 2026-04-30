@@ -425,7 +425,7 @@ void MegaApplication::addFont(const QString& fontPath)
     if (fontId == -1)
     {
         throw std::runtime_error(
-            QString::fromUtf8("couldn't load the font : %0").arg(fontPath).toStdString());
+            QString::fromUtf8("couldn't load the font : %1").arg(fontPath).toStdString());
     }
 #else
     Q_UNUSED(fontId);
