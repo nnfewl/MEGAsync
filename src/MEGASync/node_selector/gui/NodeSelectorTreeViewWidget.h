@@ -360,14 +360,17 @@ public:
         QString title;
         QString description;
         QIcon icon;
+        bool iconTokenized = true;
+        QString descriptionLabelFontSize;
 
-        bool isEmpty()
+        bool isValid()
         {
-            return !(!title.isEmpty() || !description.isEmpty() || !icon.isNull());
+            return !title.isEmpty() && !description.isEmpty() && !icon.isNull() &&
+                   !descriptionLabelFontSize.isEmpty();
         }
     };
 
-    virtual EmptyFolderPageInfo updateEmptyFolderPage()
+    virtual EmptyFolderPageInfo getEmptyFolderPageInfo()
     {
         return EmptyFolderPageInfo();
     }
@@ -398,7 +401,7 @@ public:
     void init(NodeSelectorTreeViewWidget* wdg) override;
     bool okButtonEnabled(NodeSelectorTreeViewWidget* wdg, const QModelIndexList& selected) override;
     NodeSelectorModelItemSearch::Types allowedTypes() override;
-    EmptyFolderPageInfo updateEmptyFolderPage() override;
+    EmptyFolderPageInfo getEmptyFolderPageInfo() override;
 };
 
 class StreamType: public SelectType

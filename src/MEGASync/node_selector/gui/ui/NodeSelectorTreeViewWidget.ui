@@ -835,6 +835,9 @@ color: #616366; /*colorToken.text-secondary*/
              <property name="bottomMargin">
               <number>0</number>
              </property>
+             <property name="verticalSpacing">
+              <number>24</number>
+             </property>
              <item row="1" column="0">
               <spacer name="horizontalSpacer_3">
                <property name="orientation">
@@ -944,10 +947,7 @@ color: #616366; /*colorToken.text-secondary*/
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
                   </property>
-                  <property name="font-size" stdset="0">
-                   <string notr="true">label-1</string>
-                  </property>
-                  <property name="semibold" stdset="0">
+                  <property name="bold" stdset="0">
                    <bool>true</bool>
                   </property>
                  </widget>
@@ -975,8 +975,11 @@ color: #616366; /*colorToken.text-secondary*/
                   <property name="wordWrap">
                    <bool>true</bool>
                   </property>
-                  <property name="font-size" stdset="0">
-                   <string notr="true">label-2</string>
+                  <property name="type" stdset="0">
+                   <string notr="true">secondary</string>
+                  </property>
+                  <property name="regular" stdset="0">
+                   <bool>false</bool>
                   </property>
                  </widget>
                 </item>
@@ -1145,8 +1148,11 @@ color: #616366; /*colorToken.text-secondary*/
                 </property>
                 <item>
                  <widget class="QLabel" name="titleEmptyFolderLabel">
+                  <property name="visible">
+                   <bool>false</bool>
+                  </property>
                   <property name="text">
-                   <string>Folder is empty</string>
+                   <string/>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
@@ -1154,7 +1160,7 @@ color: #616366; /*colorToken.text-secondary*/
                   <property name="font-size" stdset="0">
                    <string notr="true">label-1</string>
                   </property>
-                  <property name="semibold" stdset="0">
+                  <property name="bold" stdset="0">
                    <bool>true</bool>
                   </property>
                  </widget>
@@ -1174,7 +1180,7 @@ color: #616366; /*colorToken.text-secondary*/
                    </size>
                   </property>
                   <property name="text">
-                   <string notr="true"/>
+                   <string>Folder is empty</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignCenter</set>
@@ -1184,6 +1190,12 @@ color: #616366; /*colorToken.text-secondary*/
                   </property>
                   <property name="font-size" stdset="0">
                    <string notr="true">label-2</string>
+                  </property>
+                  <property name="type" stdset="0">
+                   <string notr="true">secondary</string>
+                  </property>
+                  <property name="regular" stdset="0">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>

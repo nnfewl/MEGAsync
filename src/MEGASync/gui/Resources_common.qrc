@@ -323,9 +323,9 @@
         <file alias="images/icons/folder/folder-mono_24.png">images/icons/folder/folder-mono_24.png</file>
         <file alias="images/icons/folder/folder-mono_24@2x.png">images/icons/folder/folder-mono_24@2x.png</file>
         <file alias="images/icons/folder/folder-mono_24@3x.png">images/icons/folder/folder-mono_24@3x.png</file>
-        <file alias="images/icons/folder/synced-folder.png">images/icons/folder/synced-folder.png</file>
-        <file alias="images/icons/folder/synced-folder@2x.png">images/icons/folder/synced-folder@2x.png</file>
-        <file alias="images/icons/folder/synced-folder@3x.png">images/icons/folder/synced-folder@3x.png</file>
+        <file alias="synced-folder">images/icons/folder/synced-folder.png</file>
+        <file alias="synced-folder@2x">images/icons/folder/synced-folder@2x.png</file>
+        <file alias="synced-folder@3x">images/icons/folder/synced-folder@3x.png</file>
         <file alias="images/icons/ico_add_sync.png">images/icons/ico_add_sync.png</file>
         <file alias="images/icons/ico_add_sync@2x.png">images/icons/ico_add_sync@2x.png</file>
         <file alias="images/icons/ico_add_sync@3x.png">images/icons/ico_add_sync@3x.png</file>
