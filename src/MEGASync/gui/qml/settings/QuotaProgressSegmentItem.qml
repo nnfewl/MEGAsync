@@ -89,7 +89,6 @@ Rectangle {
         font.weight: Font.DemiBold
         lineHeight: 16
         lineHeightMode: Text.FixedHeight
-        renderType: Text.NativeRendering
         z: 1
     }
 

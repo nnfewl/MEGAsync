@@ -303,7 +303,6 @@ Item {
                                 lineHeight: 16
                                 lineHeightMode: Text.FixedHeight
                                 color: ColorTheme.textPrimary
-                                renderType: Text.NativeRendering // Avoids the slightly blurred text appearance from default QML rendering in embedded QQuickWidget content.
                             }
                         }
 
@@ -379,7 +378,6 @@ Item {
                             font.weight: Font.DemiBold
                             lineHeight: root.bannerTextLineHeight
                             lineHeightMode: Text.FixedHeight
-                            renderType: Text.NativeRendering // Avoids the slightly blurred text appearance from default QML rendering in embedded QQuickWidget content.
                         }
 
                         Texts.Text {
@@ -393,7 +391,6 @@ Item {
                             font.weight: Font.Normal
                             lineHeight: root.bannerTextLineHeight
                             lineHeightMode: Text.FixedHeight
-                            renderType: Text.NativeRendering // Avoids the slightly blurred text appearance from default QML rendering in embedded QQuickWidget content.
                         }
                     }
                 }

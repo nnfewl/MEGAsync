@@ -74,7 +74,6 @@ Popup {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.Wrap
-                renderType: Text.NativeRendering
             }
 
             Texts.Text {
@@ -98,7 +97,6 @@ Popup {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 wrapMode: Text.Wrap
-                renderType: Text.NativeRendering
             }
         }
 
