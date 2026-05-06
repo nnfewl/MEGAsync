@@ -1800,7 +1800,7 @@ QString PlatformImplementation::getDefaultVideoPlayer()
     WCHAR buff[MAX_PATH];
     if (SHGetFolderPath(0, CSIDL_PROGRAM_FILESX86, NULL, SHGFP_TYPE_CURRENT, buff) == S_OK)
     {
-        QString path = QString::fromUtf16((ushort *)buff);
+        QString path = QString::fromUtf16((char16_t*)buff);
         path.append(QString::fromUtf8("\\Windows Media Player\\wmplayer.exe"));
         if (QFile(path).exists())
         {
@@ -1837,7 +1837,7 @@ QString PlatformImplementation::findAssociatedData(const ASSOCSTR type, const QS
                                NULL, buffer, &length);
         if (ret == S_OK)
         {
-            data = QString::fromUtf16((ushort *)buffer);
+            data = QString::fromUtf16((char16_t*)buffer);
         }
         delete [] buffer;
     }
