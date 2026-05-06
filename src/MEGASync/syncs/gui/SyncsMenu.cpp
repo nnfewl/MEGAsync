@@ -284,7 +284,10 @@ void BackupSyncsMenu::refresh()
         auto* const firstBackup (actions.isEmpty() ? nullptr : actions.first());
 
         // Show device name
-        mDevNameAction->deleteLater();
+        if (mDevNameAction)
+        {
+            mDevNameAction->deleteLater();
+        }
         // Display device name before folders
         mDevNameAction =
             new MegaMenuItemAction(QString(),
