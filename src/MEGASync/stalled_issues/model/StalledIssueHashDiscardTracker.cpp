@@ -69,7 +69,8 @@ void StalledIssueHashDiscardTracker::keepTrackIssues(StalledIssuesVariantList& i
     }
 }
 
-void StalledIssueHashDiscardTracker::track(const StalledIssue* issue, StalledIssue::SolveType state)
+void StalledIssueHashDiscardTracker::track(const StalledIssue* issue,
+                                           StalledIssue::ResolutionState state)
 {
     if (!issue)
     {

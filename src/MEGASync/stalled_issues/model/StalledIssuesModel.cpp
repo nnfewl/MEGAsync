@@ -1267,11 +1267,11 @@ bool StalledIssuesModel::issueSolvingFinished(StalledIssue* issue, bool wasSucce
 {
     if(wasSuccessful)
     {
-        issue->setIsSolved(StalledIssue::SolveType::SOLVED);
+        issue->setIsSolved(StalledIssue::ResolutionState::SOLVED);
     }
     else
     {
-        issue->setIsSolved(StalledIssue::SolveType::FAILED);
+        issue->setIsSolved(StalledIssue::ResolutionState::FAILED);
     }
 
     return issueSolvingFinished(issue);
@@ -1281,7 +1281,7 @@ bool StalledIssuesModel::issueSolved(const StalledIssue* issue)
 {
     if(issue && issue->isSolved() && !issue->isPotentiallySolved())
     {
-        mHashDiscardTracker->track(issue, StalledIssue::SolveType::SOLVED);
+        mHashDiscardTracker->track(issue, StalledIssue::ResolutionState::SOLVED);
 
         auto issueVariant(getIssueVariantByIssue(issue));
         if(issueVariant.isValid())
@@ -1308,7 +1308,7 @@ bool StalledIssuesModel::issueFailed(const StalledIssue* issue)
 {
     if(issue && issue->isFailed())
     {
-        mHashDiscardTracker->track(issue, StalledIssue::SolveType::FAILED);
+        mHashDiscardTracker->track(issue, StalledIssue::ResolutionState::FAILED);
 
         auto issueVariant(getIssueVariantByIssue(issue));
         if(issueVariant.isValid())

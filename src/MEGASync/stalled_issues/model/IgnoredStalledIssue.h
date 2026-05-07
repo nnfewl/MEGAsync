@@ -13,7 +13,7 @@ public:
     IgnoredStalledIssue(const mega::MegaSyncStall *stallIssue);
     ~IgnoredStalledIssue() = default;
 
-    SolveType autoSolveIssue() override;
+    ResolutionState autoSolveIssue() override;
     bool isAutoSolvable() const override;
 
     void fillIssue(const mega::MegaSyncStall *stall) override;

@@ -339,7 +339,6 @@ private:
     mutable StalledIssuesVariantList mStalledIssues;
     mutable StalledIssuesVariantList mSolvedStalledIssues;
     mutable StalledIssuesVariantList mFailedStalledIssues;
-    mutable StalledIssuesVariantList mPendingTrackedFailedStalledIssues;
     mutable QHash<const StalledIssue*, int> mStalledIssuesByOrder;
     mutable QMultiHash<unsigned long long, const StalledIssue*> mStalledIssueRowByHash;
 

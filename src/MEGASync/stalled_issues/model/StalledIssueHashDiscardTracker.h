@@ -16,7 +16,7 @@ public:
 
     void prepareForNewRequest(const StalledIssuesVariantList& issues);
     void keepTrackIssues(StalledIssuesVariantList& issues);
-    void track(const StalledIssue* issue, StalledIssue::SolveType state);
+    void track(const StalledIssue* issue, StalledIssue::ResolutionState state);
     void markAsRecentlyReceived(const StalledIssue* issue);
     void purgeExpired();
     bool shouldDiscard(size_t hash) const;

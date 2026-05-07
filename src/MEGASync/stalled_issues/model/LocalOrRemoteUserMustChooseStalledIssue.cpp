@@ -16,7 +16,7 @@ LocalOrRemoteUserMustChooseStalledIssue::LocalOrRemoteUserMustChooseStalledIssue
 {
 }
 
-StalledIssue::SolveType LocalOrRemoteUserMustChooseStalledIssue::autoSolveIssue()
+StalledIssue::ResolutionState LocalOrRemoteUserMustChooseStalledIssue::autoSolveIssue()
 {
     setAutoResolutionApplied(true);
 
@@ -61,10 +61,10 @@ StalledIssue::SolveType LocalOrRemoteUserMustChooseStalledIssue::autoSolveIssue(
     {
         MegaSyncApp->getStatsEventHandler()->sendEvent(
             AppStatsEvents::EventType::SI_LOCALREMOTE_SOLVED_AUTOMATICALLY);
-        return StalledIssue::SolveType::SOLVED;
+        return StalledIssue::ResolutionState::SOLVED;
     }
 
-    return StalledIssue::SolveType::FAILED;
+    return StalledIssue::ResolutionState::FAILED;
 }
 
 bool LocalOrRemoteUserMustChooseStalledIssue::chooseLastMTimeSide()
@@ -127,7 +127,7 @@ bool LocalOrRemoteUserMustChooseStalledIssue::isAutoSolvable() const
     return result;
 }
 
-void LocalOrRemoteUserMustChooseStalledIssue::setIsSolved(SolveType type)
+void LocalOrRemoteUserMustChooseStalledIssue::setIsSolved(ResolutionState type)
 {
     StalledIssue::setIsSolved(type);
     if(isSolved())
@@ -170,7 +170,7 @@ void LocalOrRemoteUserMustChooseStalledIssue::fillIssue(const mega::MegaSyncStal
     //Check if transfer already exists
     if (isBeingSolvedByUpload(info, true))
     {
-        setIsSolved(StalledIssue::SolveType::SOLVED);
+        setIsSolved(StalledIssue::ResolutionState::SOLVED);
     }
 
 }

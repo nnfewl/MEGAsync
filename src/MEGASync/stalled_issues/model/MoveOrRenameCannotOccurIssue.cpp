@@ -553,16 +553,16 @@ bool MoveOrRenameCannotOccurIssue::solveAttemptsAchieved() const
     return mSolveAttempts >= MAX_RETRIES;
 }
 
-StalledIssue::SolveType MoveOrRenameCannotOccurIssue::autoSolveIssue()
+StalledIssue::ResolutionState MoveOrRenameCannotOccurIssue::autoSolveIssue()
 {
     auto chosenSide(getSyncIdChosenSide());
     if(isAutoSolvable() && !(chosenSide == MoveOrRenameIssueChosenSide::NONE))
     {
         solveIssue(chosenSide);
-        return StalledIssue::SolveType::BEING_SOLVED;
+        return StalledIssue::ResolutionState::BEING_SOLVED;
     }
 
-    return StalledIssue::SolveType::FAILED;
+    return StalledIssue::ResolutionState::FAILED;
 }
 
 bool MoveOrRenameCannotOccurIssue::isKeepSideAvailable(MoveOrRenameIssueChosenSide side) const
@@ -595,7 +595,7 @@ bool MoveOrRenameCannotOccurIssue::checkForExternalChanges(QObject*)
                                 cloudData->getMovePath().path.toStdString().c_str()));
                         if (previousNode && !currentNode)
                         {
-                            setIsSolved(StalledIssue::SolveType::POTENTIALLY_SOLVED);
+                            setIsSolved(StalledIssue::ResolutionState::POTENTIALLY_SOLVED);
                         }
                     }
                 }
@@ -611,7 +611,7 @@ bool MoveOrRenameCannotOccurIssue::checkForExternalChanges(QObject*)
                     QFileInfo currentPath(localData->getMovePath().path);
                     if (previousPath.exists() && !currentPath.exists())
                     {
-                        setIsSolved(StalledIssue::SolveType::POTENTIALLY_SOLVED);
+                        setIsSolved(StalledIssue::ResolutionState::POTENTIALLY_SOLVED);
                     }
                 }
             }
@@ -684,13 +684,13 @@ void MoveOrRenameCannotOccurIssue::finishAsyncIssueSolving()
     StalledIssue::performFinishAsyncIssueSolving(mUndoSuccessful != 0);
 }
 
-void MoveOrRenameCannotOccurIssue::setIsSolved(SolveType type)
+void MoveOrRenameCannotOccurIssue::setIsSolved(ResolutionState type)
 {
-    if(type == SolveType::FAILED)
+    if (type == ResolutionState::FAILED)
     {
         mChosenSide = MoveOrRenameIssueChosenSide::NONE;
     }
-    else if(type == SolveType::SOLVED)
+    else if (type == ResolutionState::SOLVED)
     {
         MegaSyncApp->getStatsEventHandler()->sendEvent(AppStatsEvents::EventType::SI_MOVERENAME_CANNOT_OCCUR_SOLVED_MANUALLY);
     }

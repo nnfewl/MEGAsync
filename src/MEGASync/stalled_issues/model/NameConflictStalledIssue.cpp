@@ -310,7 +310,7 @@ bool NameConflictedStalledIssue::checkForExternalChanges(QObject*)
                 {
                     if(checkAndSolveConflictedNamesSolved())
                     {
-                        setIsSolved(SolveType::POTENTIALLY_SOLVED);
+                        setIsSolved(ResolutionState::POTENTIALLY_SOLVED);
                         break;
                     }
                 }
@@ -333,7 +333,7 @@ bool NameConflictedStalledIssue::checkForExternalChanges(QObject*)
                     {
                         if(checkAndSolveConflictedNamesSolved())
                         {
-                            setIsSolved(SolveType::POTENTIALLY_SOLVED);
+                            setIsSolved(ResolutionState::POTENTIALLY_SOLVED);
                             break;
                         }
                     }
@@ -729,7 +729,7 @@ bool NameConflictedStalledIssue::semiAutoSolveIssue(ActionsSelected option)
 }
 
 //This code is never called. NameConflict, for the moment, are not autosolvable.
-StalledIssue::SolveType NameConflictedStalledIssue::autoSolveIssue()
+StalledIssue::ResolutionState NameConflictedStalledIssue::autoSolveIssue()
 {
     setAutoResolutionApplied(true);
     ActionsSelected options(ActionSelected::RemoveDuplicated | ActionSelected::Rename | ActionSelected::MergeFolders);
@@ -737,10 +737,10 @@ StalledIssue::SolveType NameConflictedStalledIssue::autoSolveIssue()
     if(result)
     {
         MegaSyncApp->getStatsEventHandler()->sendEvent(AppStatsEvents::EventType::SI_NAMECONFLICT_SOLVED_AUTOMATICALLY);
-        return StalledIssue::SolveType::SOLVED;
+        return StalledIssue::ResolutionState::SOLVED;
     }
 
-    return StalledIssue::SolveType::FAILED;
+    return StalledIssue::ResolutionState::FAILED;
 }
 
 bool NameConflictedStalledIssue::isAutoSolvable() const
@@ -750,53 +750,51 @@ bool NameConflictedStalledIssue::isAutoSolvable() const
 
 bool NameConflictedStalledIssue::solveIssue(ActionsSelected option)
 {
-    return false;
+    auto result(false);
 
-    // auto result(false);
+    if (option & ActionSelected::MergeFolders && foldersCount() > 1)
+    {
+        auto errorInfo = mCloudConflictedNames.mergeFolders();
+        result = errorInfo.error.isEmpty();
 
-    // if(option & ActionSelected::MergeFolders && foldersCount() > 1)
-    // {
-    //     auto errorInfo = mCloudConflictedNames.mergeFolders();
-    //     result = errorInfo.error.isEmpty();
+        if (result)
+        {
+            result = checkAndSolveConflictedNamesSolved();
+        }
+        else
+        {
+            setCloudFailed(errorInfo.conflictIndex, errorInfo.error);
+        }
+    }
 
-    // if(result)
-    // {
-    //     result = checkAndSolveConflictedNamesSolved();
-    // }
-    // else
-    // {
-    //     setCloudFailed(errorInfo.conflictIndex, errorInfo.error);
-    // }
-    // }
+    if (!result && option & ActionSelected::RemoveDuplicated)
+    {
+        result = mCloudConflictedNames.removeDuplicatedNodes() == nullptr;
+        if (result)
+        {
+            result = checkAndSolveConflictedNamesSolved();
+        }
+    }
 
-    // if(!result && option & ActionSelected::RemoveDuplicated)
-    // {
-    //     result = mCloudConflictedNames.removeDuplicatedNodes() == nullptr;
-    //     if(result)
-    //     {
-    //         result = checkAndSolveConflictedNamesSolved();
-    //     }
-    // }
+    if (!result && option & ActionSelected::KeepMostRecentlyModifiedNode)
+    {
+        result = mCloudConflictedNames.keepMostRecentlyModifiedNode() == nullptr;
+        if (result)
+        {
+            result = checkAndSolveConflictedNamesSolved();
+        }
+    }
 
-    // if(!result && option & ActionSelected::KeepMostRecentlyModifiedNode)
-    // {
-    //     result = mCloudConflictedNames.keepMostRecentlyModifiedNode() == nullptr;
-    //     if(result)
-    //     {
-    //         result = checkAndSolveConflictedNamesSolved();
-    //     }
-    // }
+    if (!result && option & ActionSelected::Rename)
+    {
+        result = renameNodesAutomatically();
+        if (result)
+        {
+            checkAndSolveConflictedNamesSolved();
+        }
+    }
 
-    // if(!result && option & ActionSelected::Rename)
-    // {
-    //     result = renameNodesAutomatically();
-    //     if(result)
-    //     {
-    //         checkAndSolveConflictedNamesSolved();
-    //     }
-    // }
-
-    // return result;
+    return result;
 }
 
 //CloudConflictedNames logic

@@ -30,10 +30,10 @@ public:
 
     void fillIssue(const mega::MegaSyncStall* stall) override;
 
-    void setIsSolved(SolveType type) override;
+    void setIsSolved(ResolutionState type) override;
     bool isAutoSolvable() const override;
     void solveIssue(MoveOrRenameIssueChosenSide side);
-    SolveType autoSolveIssue() override;
+    ResolutionState autoSolveIssue() override;
 
     bool isKeepSideAvailable(MoveOrRenameIssueChosenSide side) const;
 

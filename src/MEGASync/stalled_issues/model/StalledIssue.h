@@ -318,7 +318,7 @@ public:
 
     virtual void updateIssue(const mega::MegaSyncStall* stallIssue);
 
-    enum SolveType
+    enum ResolutionState
     {
         UNSOLVED,
         FAILED,
@@ -333,12 +333,16 @@ public:
     bool isBeingSolved() const;
     bool isFailed() const;
 
-    SolveType getIsSolved() const {return mIsSolved;}
-    virtual void setIsSolved(SolveType type);
-
-    virtual SolveType autoSolveIssue()
+    ResolutionState getIsSolved() const
     {
-        return SolveType::FAILED;
+        return mIsSolved;
+    }
+
+    virtual void setIsSolved(ResolutionState type);
+
+    virtual ResolutionState autoSolveIssue()
+    {
+        return ResolutionState::FAILED;
     }
     virtual bool isAutoSolvable() const;
     bool isBeingSolvedByUpload(std::shared_ptr<UploadTransferInfo> info, bool isSourcePath) const;
@@ -406,7 +410,7 @@ public:
 
     using HashDiscardRuleOpt = std::optional<HashDiscardRule>;
 
-    virtual HashDiscardRuleOpt hashDiscardRuleForState(SolveType) const
+    virtual HashDiscardRuleOpt hashDiscardRuleForState(ResolutionState) const
     {
         return std::nullopt;
     }
@@ -421,7 +425,7 @@ public:
     struct CustomMessage
     {
         QString customMessage;
-        SolveType customType;
+        ResolutionState customType;
     };
 
     const CustomMessage& getCustomMessage() const;
@@ -448,12 +452,12 @@ protected:
 
     void performFinishAsyncIssueSolving(bool hasFailed);
 
-    void setCustomMessage(const QString& newCustomMessage, SolveType type);
+    void setCustomMessage(const QString& newCustomMessage, ResolutionState type);
 
     std::shared_ptr<mega::MegaSyncStall> originalStall;
     mega::MegaSyncStall::SyncStallReason mReason = mega::MegaSyncStall::SyncStallReason::NoReason;
     QSet<mega::MegaHandle> mSyncIds;
-    mutable SolveType mIsSolved = SolveType::UNSOLVED;
+    mutable ResolutionState mIsSolved = ResolutionState::UNSOLVED;
     CustomMessage mCustomMessage;
     uint8_t mFiles = 0;
     uint8_t mFolders = 0;

@@ -544,12 +544,12 @@ public:
     bool renameNodesAutomatically();
 
     bool semiAutoSolveIssue(ActionsSelected option);
-    SolveType autoSolveIssue() override;
+    ResolutionState autoSolveIssue() override;
     bool isAutoSolvable() const override;
 
-    HashDiscardRuleOpt hashDiscardRuleForState(SolveType type) const override
+    HashDiscardRuleOpt hashDiscardRuleForState(ResolutionState type) const override
     {
-        if (type == SolveType::FAILED)
+        if (type == ResolutionState::FAILED)
         {
             return HashDiscardRule{std::chrono::seconds(60)};
         }

@@ -13,14 +13,14 @@ public:
     LocalOrRemoteUserMustChooseStalledIssue(const mega::MegaSyncStall *stallIssue);
     ~LocalOrRemoteUserMustChooseStalledIssue() = default;
 
-    SolveType autoSolveIssue() override;
+    ResolutionState autoSolveIssue() override;
     bool isAutoSolvable() const override;
-    void setIsSolved(SolveType type) override;
+    void setIsSolved(ResolutionState type) override;
     bool checkForExternalChanges(QObject* context) override;
 
-    HashDiscardRuleOpt hashDiscardRuleForState(SolveType type) const override
+    HashDiscardRuleOpt hashDiscardRuleForState(ResolutionState type) const override
     {
-        if (type == SolveType::SOLVED)
+        if (type == ResolutionState::SOLVED)
         {
             return HashDiscardRule{std::chrono::seconds(60)};
         }

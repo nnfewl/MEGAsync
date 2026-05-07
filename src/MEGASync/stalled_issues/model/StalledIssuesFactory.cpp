@@ -265,12 +265,12 @@ void StalledIssuesCreator::createIssues(const mega::MegaSyncStallMap* stallsMap,
             // Keeps the count of fixed and failed issues
             if (solvableIssueInfo.solvedSynchronously)
             {
-                if (result == StalledIssue::SolveType::FAILED ||
-                    result == StalledIssue::SolveType::SOLVED)
+                if (result == StalledIssue::ResolutionState::FAILED ||
+                    result == StalledIssue::ResolutionState::SOLVED)
                 {
                     solvableIssue.getData()->setIsSolved(result);
 
-                    if (result == StalledIssue::SolveType::FAILED)
+                    if (result == StalledIssue::ResolutionState::FAILED)
                     {
                         mStalledIssues.mFailedAutoSolvedStalledIssues.append(solvableIssue);
                         solvingIssuesStats.issuesFailed++;

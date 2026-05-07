@@ -117,10 +117,10 @@ bool IgnoredStalledIssue::checkForExternalChanges(QObject*)
 }
 
 //Only for Symbolic, hard and special links
-StalledIssue::SolveType IgnoredStalledIssue::autoSolveIssue()
+StalledIssue::ResolutionState IgnoredStalledIssue::autoSolveIssue()
 {
     setAutoResolutionApplied(true);
-    StalledIssue::SolveType result(StalledIssue::SolveType::FAILED);
+    StalledIssue::ResolutionState result(StalledIssue::ResolutionState::FAILED);
 
     if(!syncIds().isEmpty())
     {
@@ -166,7 +166,7 @@ StalledIssue::SolveType IgnoredStalledIssue::autoSolveIssue()
                 auto changesApplied(ignoreManager.applyChanges());
                 if(changesApplied < MegaIgnoreManager::ApplyChangesError::NO_WRITE_PERMISSION)
                 {
-                    result = StalledIssue::SolveType::SOLVED;
+                    result = StalledIssue::ResolutionState::SOLVED;
                 }
                 else
                 {
@@ -180,7 +180,7 @@ StalledIssue::SolveType IgnoredStalledIssue::autoSolveIssue()
         //Only done for sym links
         else if(mSymLinksIgnoredInSyncs.value(syncId) == true)
         {
-            result = StalledIssue::SolveType::SOLVED;
+            result = StalledIssue::ResolutionState::SOLVED;
         }
     }
 
