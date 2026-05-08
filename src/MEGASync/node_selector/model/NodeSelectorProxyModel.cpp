@@ -65,15 +65,6 @@ void NodeSelectorProxyModel::sort(int column, Qt::SortOrder order)
     }
 }
 
-void NodeSelectorProxyModel::applyProxyModelFlags(Qt::ItemFlags& flags,
-                                                  const QModelIndex& index) const
-{
-    if (index.isValid() && index.data(toInt(NodeSelectorModelRoles::IS_TAKEN_DOWN_ROLE)).toBool())
-    {
-        flags &= ~(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
-    }
-}
-
 Qt::ItemFlags NodeSelectorProxyModel::flags(const QModelIndex& index) const
 {
     auto flags = Qt::ItemFlags();

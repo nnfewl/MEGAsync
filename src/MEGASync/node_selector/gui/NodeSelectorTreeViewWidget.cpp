@@ -668,7 +668,7 @@ void NodeSelectorTreeViewWidget::onItemDoubleClick(const QModelIndex& index)
     if (!isAllowedToEnterInIndex(index))
     {
         auto item = mModel->getItemByIndex(index);
-        if (item && item->getNode()->isFile())
+        if (item && item->getNode()->isFile() && !item->isTakenDown())
         {
             MegaSyncApp->downloadACtionClickedWithHandles(QList<mega::MegaHandle>()
                                                           << item->getNode()->getHandle());
@@ -1836,6 +1836,17 @@ void NodeSelectorTreeViewWidget::Navigation::clear()
     forwardHandles.clear();
 }
 
+bool SelectType::okButtonEnabled(NodeSelectorTreeViewWidget*, const QModelIndexList& selected)
+{
+    return std::none_of(
+        selected.cbegin(),
+        selected.cend(),
+        [](const QModelIndex& index)
+        {
+            return index.data(toInt(NodeSelectorModelRoles::IS_TAKEN_DOWN_ROLE)).toBool();
+        });
+}
+
 bool SelectType::isAllowedToNavigateInside(const QModelIndex& index)
 {
     auto item = NodeSelectorModel::getItemByIndex(index);
@@ -1843,7 +1854,8 @@ bool SelectType::isAllowedToNavigateInside(const QModelIndex& index)
     {
         return false;
     }
-    return !(item->getNode()->isFile() || item->isCloudDrive() || item->isRubbishBin());
+    return !(item->getNode()->isFile() || item->isCloudDrive() || item->isRubbishBin() ||
+             item->isTakenDown());
 }
 
 void SelectType::newFolderButtonVisibility(NodeSelectorTreeViewWidget* wdg)
@@ -1896,15 +1908,8 @@ void DownloadType::newFolderButtonVisibility(NodeSelectorTreeViewWidget* wdg)
 
 bool DownloadType::okButtonEnabled(NodeSelectorTreeViewWidget* wdg, const QModelIndexList& selected)
 {
-    const auto hasTakenDownSelection = std::any_of(
-        selected.cbegin(),
-        selected.cend(),
-        [](const QModelIndex& index)
-        {
-            return index.data(toInt(NodeSelectorModelRoles::IS_TAKEN_DOWN_ROLE)).toBool();
-        });
-
-    return !hasTakenDownSelection && (!selected.isEmpty() || cloudDriveIsCurrentRootIndex(wdg));
+    return SelectType::okButtonEnabled(wdg, selected) &&
+           (!selected.isEmpty() || cloudDriveIsCurrentRootIndex(wdg));
 }
 
 NodeSelectorModelItemSearch::Types DownloadType::allowedTypes()
@@ -1921,9 +1926,9 @@ void SyncType::init(NodeSelectorTreeViewWidget* wdg)
     wdg->mModel->showReadOnlyFolders(false);
 }
 
-bool SyncType::okButtonEnabled(NodeSelectorTreeViewWidget*, const QModelIndexList& selected)
+bool SyncType::okButtonEnabled(NodeSelectorTreeViewWidget* wdg, const QModelIndexList& selected)
 {
-    if (selected.size() == 1)
+    if (selected.size() == 1 && SelectType::okButtonEnabled(wdg, selected))
     {
         bool isSyncable =
             selected.first().data(toInt(NodeSelectorModelRoles::IS_SYNCABLE_FOLDER_ROLE)).toBool();
@@ -1979,12 +1984,11 @@ void StreamType::newFolderButtonVisibility(NodeSelectorTreeViewWidget* wdg)
     wdg->setNewFolderButtonVisibility(false);
 }
 
-bool StreamType::okButtonEnabled(NodeSelectorTreeViewWidget*, const QModelIndexList& selected)
+bool StreamType::okButtonEnabled(NodeSelectorTreeViewWidget* wdg, const QModelIndexList& selected)
 {
-    if (selected.size() == 1)
+    if (selected.size() == 1 && SelectType::okButtonEnabled(wdg, selected))
     {
-        return selected.first().data(toInt(NodeSelectorModelRoles::IS_FILE_ROLE)).toBool() &&
-               !selected.first().data(toInt(NodeSelectorModelRoles::IS_TAKEN_DOWN_ROLE)).toBool();
+        return selected.first().data(toInt(NodeSelectorModelRoles::IS_FILE_ROLE)).toBool();
     }
 
     return false;
@@ -2011,15 +2015,15 @@ void UploadType::init(NodeSelectorTreeViewWidget* wdg)
 bool UploadType::okButtonEnabled(NodeSelectorTreeViewWidget* wdg, const QModelIndexList& selected)
 {
     auto itemsSelected(selected.size());
-    // If we have one or less items selected
     if (itemsSelected < 2)
     {
-        return itemsSelected == 1 ?
-                   !selected.first().data(toInt(NodeSelectorModelRoles::IS_FILE_ROLE)).toBool() :
-                   !wdg->isCurrentRootIndexReadOnly();
+        return itemsSelected == 1 ? SelectType::okButtonEnabled(wdg, selected) &&
+                                        !selected.first()
+                                             .data(toInt(NodeSelectorModelRoles::IS_FILE_ROLE))
+                                             .toBool() :
+                                    !wdg->isCurrentRootIndexReadOnly();
     }
 
-    // If we have more than one item selected, we cannot upload anything
     return false;
 }
 
@@ -2154,14 +2158,7 @@ void CloudDriveType::selectionHasChanged(NodeSelectorTreeViewWidget* wdg)
 bool MoveBackupType::okButtonEnabled(NodeSelectorTreeViewWidget* wdg,
                                      const QModelIndexList& selected)
 {
-    if (selected.size() == 1)
-    {
-        bool isTakenDown =
-            selected.first().data(toInt(NodeSelectorModelRoles::IS_TAKEN_DOWN_ROLE)).toBool();
-        return !isTakenDown;
-    }
-
-    return false;
+    return selected.size() == 1 && SelectType::okButtonEnabled(wdg, selected);
 }
 
 NodeSelectorModelItemSearch::Types MoveBackupType::allowedTypes()

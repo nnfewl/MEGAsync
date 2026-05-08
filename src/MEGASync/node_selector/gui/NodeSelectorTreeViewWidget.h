@@ -332,8 +332,7 @@ public:
 
     virtual bool isAllowedToNavigateInside(const QModelIndex& index);
     virtual void init(NodeSelectorTreeViewWidget* wdg) = 0;
-    virtual bool okButtonEnabled(NodeSelectorTreeViewWidget* wdg,
-                                 const QModelIndexList& selected) = 0;
+    virtual bool okButtonEnabled(NodeSelectorTreeViewWidget* wdg, const QModelIndexList& selected);
 
     virtual void selectionHasChanged(NodeSelectorTreeViewWidget*) {}
 

@@ -27,7 +27,8 @@ public:
 
     void sort(int column, Qt::SortOrder order = Qt::AscendingOrder) override;
     Qt::ItemFlags flags(const QModelIndex& index) const override;
-    virtual void applyProxyModelFlags(Qt::ItemFlags& flags, const QModelIndex& index) const;
+
+    virtual void applyProxyModelFlags(Qt::ItemFlags& flags, const QModelIndex& index) const {}
 
     mega::MegaHandle getHandle(const QModelIndex& index);
     std::shared_ptr<mega::MegaNode> getNode(const QModelIndex& index);

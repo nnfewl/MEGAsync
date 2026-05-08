@@ -31,23 +31,20 @@ void NodeSelectorDelegate::paint(QPainter* painter,
         pen.setWidth(1);
 
         // Text color
-        if (!index.flags().testFlag(Qt::ItemIsEnabled))
+        const auto isTakenDown(
+            index.data(toInt(NodeSelectorModelRoles::IS_TAKEN_DOWN_ROLE)).toBool());
+
+        if (isTakenDown)
         {
-            const auto isTakenDown(
-                index.data(toInt(NodeSelectorModelRoles::IS_TAKEN_DOWN_ROLE)).toBool());
-
-            QColor color;
-            if (isTakenDown)
-            {
-                color = TokenParserWidgetManager::instance()->getColor(QLatin1String("text-error"));
-            }
-            else
-            {
-                color =
-                    TokenParserWidgetManager::instance()->getColor(QLatin1String("text-disabled"));
-            }
-
-            auxOpt.palette.setBrush(QPalette::ColorRole::Text, color);
+            auxOpt.palette.setBrush(
+                QPalette::ColorRole::Text,
+                TokenParserWidgetManager::instance()->getColor(QLatin1String("text-error")));
+        }
+        else if (!index.flags().testFlag(Qt::ItemIsEnabled))
+        {
+            auxOpt.palette.setBrush(
+                QPalette::ColorRole::Text,
+                TokenParserWidgetManager::instance()->getColor(QLatin1String("text-disabled")));
         }
         else
         {
@@ -235,12 +232,7 @@ void NodeRowDelegate::initStyleOption(QStyleOptionViewItem* option, const QModel
 {
     QStyledItemDelegate::initStyleOption(option, index);
 
-    // Taken down is disabled but we want it to look like an enabled row
-    if (index.data(toInt(NodeSelectorModelRoles::IS_TAKEN_DOWN_ROLE)).toBool())
-    {
-        option->state |= QStyle::State_Enabled;
-    }
-    else if (!index.flags().testFlag(Qt::ItemIsEnabled))
+    if (!index.flags().testFlag(Qt::ItemIsEnabled))
     {
         option->state &= ~QStyle::State_Enabled;
     }
