@@ -1039,7 +1039,7 @@ void NodeSelectorTreeView::dropEvent(QDropEvent* event)
                     node = getDropNode(parentIndex);
                 }
 
-                if (node)
+                if (node && !node->isTakenDown())
                 {
                     MegaSyncApp->uploadFilesToNode(urlList,
                                                    node->getHandle(),

@@ -966,6 +966,12 @@ bool NodeSelectorModel::canDropMimeData() const
 bool NodeSelectorModel::checkDraggedMimeData(const QMimeData* data,
                                              const QModelIndex& dropIndex) const
 {
+    auto targetItem = getItemByIndex(dropIndex);
+    if (targetItem && targetItem->isTakenDown())
+    {
+        return false;
+    }
+
     QByteArray encodedData = data->data(MIME_DATA_INTERNAL_MOVE);
     QDataStream stream(&encodedData, QIODevice::ReadOnly);
 
@@ -975,12 +981,6 @@ bool NodeSelectorModel::checkDraggedMimeData(const QMimeData* data,
         stream >> handle;
 
         if (Utilities::getNodeAccess(handle) < mega::MegaShare::ACCESS_FULL)
-        {
-            return false;
-        }
-
-        auto item = getItemByIndex(dropIndex);
-        if (item && item->isTakenDown())
         {
             return false;
         }
