@@ -9,6 +9,12 @@
 #include <QTimer>
 #include <QVector>
 
+#ifdef Q_OS_LINUX
+#include <QDBusConnection>
+#include <QDBusMessage>
+#include <QDBusVariant>
+#endif
+
 class TrayIconManager: public QObject
 {
     Q_OBJECT
@@ -71,6 +77,9 @@ private:
     void applyCurrentStaticIcon();
     QIcon loadIcon(const QString& filename) const;
     QString themePrefix() const;
+#ifdef Q_OS_LINUX
+    void setDBusIconName(const QString& stateName);
+#endif
 
     QSystemTrayIcon* mTrayIcon = nullptr;
     QMap<QString, QIcon> mStaticIcons;

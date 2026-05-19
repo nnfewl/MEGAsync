@@ -21,6 +21,18 @@ static constexpr IconEntry ICON_TABLE[] = {
     {"someissues", "tray_icon_blocked.svg"},
 };
 
+#ifdef Q_OS_LINUX
+static const QMap<QString, QString> THEME_ICON_MAP = {
+    {"uptodate",   "megauptodate"},
+    {"synching",   "megasynching"},
+    {"paused",     "megapaused"},
+    {"logging",    "megalogging"},
+    {"warning",    "megawarning"},
+    {"alert",      "megaalert"},
+    {"someissues", "megaalert"},
+};
+#endif
+
 } // namespace
 
 const TrayIconManager::AnimationDef TrayIconManager::ANIMATION_DEFS[] = {
@@ -146,11 +158,51 @@ void TrayIconManager::applyIcon(const QIcon& icon)
     if (mTrayIcon)
     {
         mTrayIcon->setIcon(icon);
+#ifdef Q_OS_LINUX
+        setDBusIconName(mCurrentStateName);
+#endif
     }
 }
 
+#ifdef Q_OS_LINUX
+void TrayIconManager::setDBusIconName(const QString& stateName)
+{
+    QString iconName = THEME_ICON_MAP.value(stateName);
+    if (iconName.isEmpty()) return;
+
+    QDBusConnection bus = QDBusConnection::sessionBus();
+
+    QDBusMessage msg = QDBusMessage::createMethodCall(
+        bus.baseService(),
+        "/StatusNotifierItem",
+        "org.freedesktop.DBus.Properties",
+        "Set"
+    );
+    msg << "org.kde.StatusNotifierItem"
+        << "IconName"
+        << QVariant::fromValue(QDBusVariant(iconName));
+    bus.send(msg);
+
+    QDBusMessage signal = QDBusMessage::createSignal(
+        "/StatusNotifierItem",
+        "org.kde.StatusNotifierItem",
+        "NewIcon"
+    );
+    bus.send(signal);
+}
+#endif
+
 void TrayIconManager::startAnimation(Animation animation)
 {
+#ifdef Q_OS_LINUX
+    mCurrentAnimation = animation;
+    if (animation == Animation::Logging)
+        setDBusIconName(QStringLiteral("logging"));
+    else
+        setDBusIconName(QStringLiteral("synching"));
+    return;
+#endif
+
     const bool animationChanged = (mCurrentAnimation != animation);
     mCurrentAnimation = animation;
 

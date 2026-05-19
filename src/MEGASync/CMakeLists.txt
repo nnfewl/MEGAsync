@@ -133,7 +133,7 @@ if (WIN32)
 elseif (APPLE)
     find_package(Qt5 REQUIRED COMPONENTS MacExtras Svg)
 else()
-    find_package(Qt5 REQUIRED COMPONENTS Svg)
+    find_package(Qt5 REQUIRED COMPONENTS Svg DBus)
 endif()
 
 message(STATUS "Building the MEGA Desktop App with Qt v${Qt5_VERSION} from ${Qt5_DIR}")
@@ -155,6 +155,10 @@ target_link_libraries(MEGAsync
     Qt5::Quick
     Qt5::QuickWidgets
 )
+
+if (NOT WIN32 AND NOT APPLE)
+    target_link_libraries(MEGAsync PRIVATE Qt5::DBus)
+endif()
 
 ## Adjust compilation flags for warnings and errors ##
 target_platform_compile_options(
