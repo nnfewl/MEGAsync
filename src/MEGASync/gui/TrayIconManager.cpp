@@ -23,13 +23,13 @@ static constexpr IconEntry ICON_TABLE[] = {
 
 #ifdef Q_OS_LINUX
 static const QMap<QString, QString> THEME_ICON_MAP = {
-    {"uptodate",   "megauptodate"},
-    {"synching",   "megasynching"},
-    {"paused",     "megapaused"},
-    {"logging",    "megalogging"},
-    {"warning",    "megawarning"},
-    {"alert",      "megaalert"},
-    {"someissues", "megaalert"},
+    {QStringLiteral("uptodate"),   QStringLiteral("megauptodate")},
+    {QStringLiteral("synching"),   QStringLiteral("megasynching")},
+    {QStringLiteral("paused"),     QStringLiteral("megapaused")},
+    {QStringLiteral("logging"),    QStringLiteral("megalogging")},
+    {QStringLiteral("warning"),    QStringLiteral("megawarning")},
+    {QStringLiteral("alert"),      QStringLiteral("megaalert")},
+    {QStringLiteral("someissues"), QStringLiteral("megaalert")},
 };
 #endif
 
