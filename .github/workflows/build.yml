@@ -35,6 +35,13 @@ jobs:
           git submodule init
           git submodule update --depth=1
 
+      - name: Apply AUR compatibility patches
+        run: |
+          patch -d src/MEGASync/mega -Np1 -i "$GITHUB_WORKSPACE/patches/010-sdk-fix-cmake-dependencies-detection.patch"
+          patch -Np1 -i patches/020-app-fix-cmake-dependencies-detection.patch
+          patch -Np1 -i patches/030-app-disable-isolated-gfx.patch
+          patch -d src/MEGASync/mega -Np1 -i "$GITHUB_WORKSPACE/patches/040-sdk-add-missing-icu-link-library.patch"
+
       - name: Build MEGAsync
         run: |
           export CXXFLAGS+=' -DNDEBUG'
@@ -48,7 +55,6 @@ jobs:
             -DUSE_BREAKPAD:BOOL='OFF' \
             -DUSE_FFMPEG:BOOL='OFF' \
             -DUSE_FREEIMAGE:BOOL='OFF' \
-            -DENABLE_ISOLATED_GFX:BOOL='OFF' \
             -DUSE_PDFIUM:BOOL='OFF' \
             -Wno-dev
           cmake --build build --target MEGAsync

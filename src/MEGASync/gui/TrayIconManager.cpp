@@ -174,19 +174,19 @@ void TrayIconManager::setDBusIconName(const QString& stateName)
 
     QDBusMessage msg = QDBusMessage::createMethodCall(
         bus.baseService(),
-        "/StatusNotifierItem",
-        "org.freedesktop.DBus.Properties",
-        "Set"
+        QStringLiteral("/StatusNotifierItem"),
+        QStringLiteral("org.freedesktop.DBus.Properties"),
+        QStringLiteral("Set")
     );
-    msg << "org.kde.StatusNotifierItem"
-        << "IconName"
+    msg << QStringLiteral("org.kde.StatusNotifierItem")
+        << QStringLiteral("IconName")
         << QVariant::fromValue(QDBusVariant(iconName));
     bus.send(msg);
 
     QDBusMessage signal = QDBusMessage::createSignal(
-        "/StatusNotifierItem",
-        "org.kde.StatusNotifierItem",
-        "NewIcon"
+        QStringLiteral("/StatusNotifierItem"),
+        QStringLiteral("org.kde.StatusNotifierItem"),
+        QStringLiteral("NewIcon")
     );
     bus.send(signal);
 }
