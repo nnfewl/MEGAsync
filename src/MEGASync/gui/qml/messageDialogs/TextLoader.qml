@@ -16,7 +16,10 @@ Loader {
     property real textLeftPadding : 0
 
     Layout.fillWidth: true
+    Layout.preferredHeight: item ? item.implicitHeight : 0
     visible: root.textInfo ? root.textInfo.text !== "" : false
+    active: root.textInfo !== null
+    asynchronous: false
 
     sourceComponent: {
         if (!root.textInfo) {
@@ -36,6 +39,7 @@ Loader {
         id: textComponent
 
         Texts.Text {
+            width: root.width
             lineHeightMode: Text.FixedHeight
             lineHeight: root.textLineHeight
             wrapMode: Text.Wrap
@@ -52,6 +56,7 @@ Loader {
         id: richTextComponent
 
         Texts.RichText {
+            width: root.width
             lineHeightMode: Text.FixedHeight
             lineHeight: root.textLineHeight
             wrapMode: Text.Wrap
