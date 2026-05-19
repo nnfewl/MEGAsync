@@ -28,8 +28,11 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
+
+      - name: Init submodules
+        run: |
+          git submodule init
+          git submodule update --depth=1
 
       - name: Build MEGAsync
         run: |
@@ -75,8 +78,11 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
+
+      - name: Init submodules
+        run: |
+          git submodule init
+          git submodule update --depth=1
 
       - name: Setup vcpkg
         run: |
