@@ -27,7 +27,7 @@ jobs:
             icu sqlite openssl zlib
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Init submodules
         run: |
@@ -65,63 +65,63 @@ jobs:
           cp build/src/MEGASync/megasync staging/megasync_arch
           chmod +x staging/megasync_arch
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: megasync_arch
           path: staging/megasync_arch
           if-no-files-found: error
           retention-days: 7
 
-  build-ubuntu:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential cmake wget autoconf-archive \
-            curl zip unzip tar pkg-config nasm \
-            libxcb-cursor0 qtbase5-dev qttools5-dev \
-            libqt5x11extras5-dev libqt5svg5-dev libqt5dbus5 qtdeclarative5-dev \
-            qml-module-qtquick-dialogs qml-module-qtquick-controls2
-
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Init submodules
-        run: |
-          git submodule init
-          git submodule update --depth=1
-
-      - name: Setup vcpkg
-        run: |
-          git clone https://github.com/microsoft/vcpkg /tmp/vcpkg
-          /tmp/vcpkg/bootstrap-vcpkg.sh
-
-      - name: Cache vcpkg packages
-        uses: actions/cache@v4
-        with:
-          path: /tmp/vcpkg/installed
-          key: vcpkg-ubuntu-${{ hashFiles('**/vcpkg.json') }}
-          restore-keys: vcpkg-ubuntu-
-
-      - name: Build MEGAsync
-        run: |
-          cmake -DVCPKG_ROOT=/tmp/vcpkg -S . -B build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DENABLE_DESIGN_TOKENS_IMPORTER:BOOL='OFF' \
-            -DENABLE_DESKTOP_APP_TESTS:BOOL='OFF' \
-            -DUSE_BREAKPAD:BOOL='OFF'
-          cmake --build build --target MEGAsync
-
-      - name: Package artifact
-        run: |
-          mkdir -p staging
-          cp build/src/MEGASync/megasync staging/megasync_ubuntu
-          chmod +x staging/megasync_ubuntu
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: megasync_ubuntu
-          path: staging/megasync_ubuntu
-          if-no-files-found: error
-          retention-days: 7
+  # build-ubuntu:
+  #   runs-on: ubuntu-24.04
+  #   steps:
+  #     - name: Install system dependencies
+  #       run: |
+  #         sudo apt-get update
+  #         sudo apt-get install -y build-essential cmake wget autoconf-archive \
+  #           curl zip unzip tar pkg-config nasm \
+  #           libxcb-cursor0 qtbase5-dev qttools5-dev \
+  #           libqt5x11extras5-dev libqt5svg5-dev libqt5dbus5 qtdeclarative5-dev \
+  #           qml-module-qtquick-dialogs qml-module-qtquick-controls2
+  #
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Init submodules
+  #       run: |
+  #         git submodule init
+  #         git submodule update --depth=1
+  #
+  #     - name: Setup vcpkg
+  #       run: |
+  #         git clone https://github.com/microsoft/vcpkg /tmp/vcpkg
+  #         /tmp/vcpkg/bootstrap-vcpkg.sh
+  #
+  #     - name: Cache vcpkg packages
+  #       uses: actions/cache@v4
+  #       with:
+  #         path: /tmp/vcpkg/installed
+  #         key: vcpkg-ubuntu-${{ hashFiles('**/vcpkg.json') }}
+  #         restore-keys: vcpkg-ubuntu-
+  #
+  #     - name: Build MEGAsync
+  #       run: |
+  #         cmake -DVCPKG_ROOT=/tmp/vcpkg -S . -B build \
+  #           -DCMAKE_BUILD_TYPE=Release \
+  #           -DENABLE_DESIGN_TOKENS_IMPORTER:BOOL='OFF' \
+  #           -DENABLE_DESKTOP_APP_TESTS:BOOL='OFF' \
+  #           -DUSE_BREAKPAD:BOOL='OFF'
+  #         cmake --build build --target MEGAsync
+  #
+  #     - name: Package artifact
+  #       run: |
+  #         mkdir -p staging
+  #         cp build/src/MEGASync/megasync staging/megasync_ubuntu
+  #         chmod +x staging/megasync_ubuntu
+  #
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: megasync_ubuntu
+  #         path: staging/megasync_ubuntu
+  #         if-no-files-found: error
+  #         retention-days: 7

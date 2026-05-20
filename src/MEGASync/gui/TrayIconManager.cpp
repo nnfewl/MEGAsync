@@ -146,6 +146,18 @@ void TrayIconManager::setIconAndTooltip(const QString& stateName, const QString&
 
 void TrayIconManager::applyCurrentStaticIcon()
 {
+#ifdef Q_OS_LINUX
+    QString themeName = THEME_ICON_MAP.value(mCurrentStateName);
+    if (!themeName.isEmpty())
+    {
+        QIcon themed = QIcon::fromTheme(themeName);
+        if (!themed.isNull())
+        {
+            applyIcon(themed);
+            return;
+        }
+    }
+#endif
     auto it = mStaticIcons.find(mCurrentStateName);
     if (it != mStaticIcons.end())
     {
@@ -158,48 +170,25 @@ void TrayIconManager::applyIcon(const QIcon& icon)
     if (mTrayIcon)
     {
         mTrayIcon->setIcon(icon);
-#ifdef Q_OS_LINUX
-        setDBusIconName(mCurrentStateName);
-#endif
     }
 }
-
-#ifdef Q_OS_LINUX
-void TrayIconManager::setDBusIconName(const QString& stateName)
-{
-    QString iconName = THEME_ICON_MAP.value(stateName);
-    if (iconName.isEmpty()) return;
-
-    QDBusConnection bus = QDBusConnection::sessionBus();
-
-    QDBusMessage msg = QDBusMessage::createMethodCall(
-        bus.baseService(),
-        QStringLiteral("/StatusNotifierItem"),
-        QStringLiteral("org.freedesktop.DBus.Properties"),
-        QStringLiteral("Set")
-    );
-    msg << QStringLiteral("org.kde.StatusNotifierItem")
-        << QStringLiteral("IconName")
-        << QVariant::fromValue(QDBusVariant(iconName));
-    bus.send(msg);
-
-    QDBusMessage signal = QDBusMessage::createSignal(
-        QStringLiteral("/StatusNotifierItem"),
-        QStringLiteral("org.kde.StatusNotifierItem"),
-        QStringLiteral("NewIcon")
-    );
-    bus.send(signal);
-}
-#endif
 
 void TrayIconManager::startAnimation(Animation animation)
 {
 #ifdef Q_OS_LINUX
     mCurrentAnimation = animation;
-    if (animation == Animation::Logging)
-        setDBusIconName(QStringLiteral("logging"));
-    else
-        setDBusIconName(QStringLiteral("synching"));
+    QString stateName = (animation == Animation::Logging)
+        ? QStringLiteral("logging") : QStringLiteral("synching");
+    QString themeName = THEME_ICON_MAP.value(stateName);
+    if (!themeName.isEmpty())
+    {
+        QIcon themed = QIcon::fromTheme(themeName);
+        if (!themed.isNull())
+        {
+            applyIcon(themed);
+            return;
+        }
+    }
     return;
 #endif
 
