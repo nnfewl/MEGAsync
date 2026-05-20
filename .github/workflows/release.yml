@@ -1,0 +1,232 @@
+name: Release patched MEGAsync
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Rebuild even if release exists'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-pipeline
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPO: meganz/MEGAsync
+
+jobs:
+  # -------------------------------------------------------------------
+  # detect-upstream
+  # -------------------------------------------------------------------
+  detect-upstream:
+    runs-on: ubuntu-24.04
+    outputs:
+      upstream-tag:     ${{ steps.detect.outputs.upstream-tag }}
+      upstream-version: ${{ steps.detect.outputs.upstream-version }}
+      should-build:     ${{ steps.detect.outputs.should-build }}
+      today:            ${{ steps.detect.outputs.today }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Detect latest upstream Linux tag
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild || 'false' }}
+        run: bash scripts/detect-upstream.sh
+      - name: Summary
+        run: |
+          echo "### Upstream state" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Tag | Version | Needs build? |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| \`${{ steps.detect.outputs.upstream-tag }}\` | ${{ steps.detect.outputs.upstream-version }} | ${{ steps.detect.outputs.should-build }} |" >> "$GITHUB_STEP_SUMMARY"
+
+  # -------------------------------------------------------------------
+  # sync-fork: fast-forward master + push upstream Linux tags to fork
+  # -------------------------------------------------------------------
+  sync-fork:
+    needs: detect-upstream
+    if: needs.detect-upstream.outputs.should-build == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ github.token }}
+      - name: Sync upstream to fork
+        env:
+          UPSTREAM_TAG: ${{ needs.detect-upstream.outputs.upstream-tag }}
+        run: |
+          git config user.email "megasync-pipeline@local"
+          git config user.name  "megasync-pipeline"
+          git remote add upstream "https://github.com/${{ env.UPSTREAM_REPO }}.git"
+          git fetch upstream master --tags
+
+          git push origin \
+            "refs/remotes/upstream/master:refs/heads/master" \
+            --force
+
+          git push origin "refs/tags/${UPSTREAM_TAG}" --force
+
+  # -------------------------------------------------------------------
+  # build-arch: Arch Linux container build
+  # -------------------------------------------------------------------
+  build-arch:
+    needs: [detect-upstream, sync-fork]
+    if: needs.detect-upstream.outputs.should-build == 'true'
+    runs-on: ubuntu-24.04
+    container:
+      image: archlinux:base-devel
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm \
+            git cmake qt5-base qt5-tools qt5-svg qt5-x11extras \
+            qt5-declarative qt5-quickcontrols qt5-quickcontrols2 \
+            crypto++ curl libsodium libuv libmediainfo libzen \
+            icu sqlite openssl zlib
+
+      - name: Checkout pipeline branch
+        uses: actions/checkout@v5
+        with:
+          ref: pipeline
+          path: pipeline
+
+      - name: Checkout fork at upstream tag
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.detect-upstream.outputs.upstream-tag }}
+          path: build-src
+          fetch-depth: 0
+
+      - name: Init submodules
+        working-directory: build-src
+        run: |
+          git config --global --add safe.directory "$(pwd)"
+          git submodule init src/MEGASync/mega
+          git submodule update --depth=1 src/MEGASync/mega
+
+      - name: Apply AUR compatibility patches
+        working-directory: build-src
+        run: |
+          patch -d src/MEGASync/mega -Np1 \
+            -i "$GITHUB_WORKSPACE/pipeline/patches/010-sdk-fix-cmake-dependencies-detection.patch"
+          patch -Np1 \
+            -i "$GITHUB_WORKSPACE/pipeline/patches/020-app-fix-cmake-dependencies-detection.patch"
+          patch -Np1 \
+            -i "$GITHUB_WORKSPACE/pipeline/patches/030-app-disable-isolated-gfx.patch"
+          patch -d src/MEGASync/mega -Np1 \
+            -i "$GITHUB_WORKSPACE/pipeline/patches/040-sdk-add-missing-icu-link-library.patch"
+
+      - name: Generate and apply theme patches
+        working-directory: build-src
+        env:
+          UPSTREAM_TAG: ${{ needs.detect-upstream.outputs.upstream-tag }}
+        run: |
+          git fetch origin tray-iconname
+          bash "$GITHUB_WORKSPACE/pipeline/scripts/generate-patches.sh" \
+            "$UPSTREAM_TAG" \
+            "origin/tray-iconname" \
+            "$GITHUB_WORKSPACE/theme-patches"
+          git apply "$GITHUB_WORKSPACE/theme-patches/050-theme-native-tray-icons.patch"
+
+      - name: Build MEGAsync
+        working-directory: build-src
+        run: |
+          export CXXFLAGS+=' -DNDEBUG'
+          cmake -B build -S . \
+            -G 'Unix Makefiles' \
+            -DCMAKE_BUILD_TYPE:STRING='None' \
+            -DCMAKE_MODULE_PATH:PATH="${PWD}/src/MEGASync/mega/cmake/modules/packages" \
+            -DCMAKE_SKIP_INSTALL_RPATH:BOOL='YES' \
+            -DENABLE_DESIGN_TOKENS_IMPORTER:BOOL='OFF' \
+            -DENABLE_DESKTOP_APP_TESTS:BOOL='OFF' \
+            -DUSE_BREAKPAD:BOOL='OFF' \
+            -DUSE_FFMPEG:BOOL='OFF' \
+            -DUSE_FREEIMAGE:BOOL='OFF' \
+            -DUSE_PDFIUM:BOOL='OFF' \
+            -Wno-dev
+          cmake --build build --target MEGAsync
+
+      - name: Package artifact
+        working-directory: build-src
+        run: |
+          mkdir -p staging
+          strip --strip-unneeded build/src/MEGASync/megasync
+          cp build/src/MEGASync/megasync staging/megasync_arch
+          chmod +x staging/megasync_arch
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: megasync-arch-${{ needs.detect-upstream.outputs.upstream-version }}
+          path: build-src/staging/megasync_arch
+          if-no-files-found: error
+          retention-days: 30
+
+  # -------------------------------------------------------------------
+  # release: create GitHub release with artifact
+  # -------------------------------------------------------------------
+  release:
+    needs: [detect-upstream, build-arch]
+    if: needs.detect-upstream.outputs.should-build == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: megasync-arch-${{ needs.detect-upstream.outputs.upstream-version }}
+          path: artifacts/
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPSTREAM_VERSION: ${{ needs.detect-upstream.outputs.upstream-version }}
+          UPSTREAM_TAG: ${{ needs.detect-upstream.outputs.upstream-tag }}
+          TODAY: ${{ needs.detect-upstream.outputs.today }}
+        run: |
+          RELEASE_TAG="linux-v${UPSTREAM_VERSION}"
+
+          # If force-rebuilding, delete existing release first
+          gh release delete "$RELEASE_TAG" --yes --cleanup-tag 2>/dev/null || true
+
+          cat > body.md <<EOF
+          ## MEGAsync ${UPSTREAM_VERSION} — Arch Linux with theme-native tray icons
+
+          **Upstream**: [\`${UPSTREAM_TAG}\`](https://github.com/meganz/MEGAsync/releases/tag/${UPSTREAM_TAG})
+          **Built**: ${TODAY}
+          **Platform**: Arch Linux (archlinux:base-devel)
+
+          ### Patches applied
+          1. AUR compatibility (cmake deps, ICU linkage, isolated GFX disabled)
+          2. Theme-native tray icons via \`QIcon::fromTheme\` — works with Papirus, Tela, etc.
+
+          ### Install
+          \`\`\`bash
+          sudo cp megasync_arch /usr/bin/megasync
+          sudo chmod +x /usr/bin/megasync
+          \`\`\`
+          EOF
+
+          gh release create "$RELEASE_TAG" \
+            --title "MEGAsync ${UPSTREAM_VERSION} (Arch, theme icons)" \
+            --notes-file body.md \
+            --target pipeline \
+            artifacts/megasync_arch
+
+  # -------------------------------------------------------------------
+  # cleanup: keep 5 most recent releases
+  # -------------------------------------------------------------------
+  cleanup:
+    needs: [release]
+    if: always() && needs.release.result == 'success'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Prune old releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/cleanup-releases.sh 5
