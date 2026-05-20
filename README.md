@@ -9,9 +9,9 @@ detect-upstream → sync-fork → build-arch → release → cleanup
 ```
 
 1. **Detect**: nightly check for new `v*_Linux` tags on upstream
-2. **Sync**: fast-forward fork's `master` + push upstream tags
+2. **Sync**: fast-forward fork's `master`, push upstream tags, auto-rebase `tray-iconname`
 3. **Build**: Arch Linux container — apply AUR patches + theme patch, cmake build, strip binary
-4. **Release**: GitHub release with `megasync_arch` binary
+4. **Release**: GitHub release with `megasync-VERSION-arch.tar.zst` install tree
 5. **Cleanup**: keep 5 most recent releases
 
 ## Patches applied
@@ -25,16 +25,27 @@ detect-upstream → sync-fork → build-arch → release → cleanup
 **Theme-native tray icons**:
 - `050` — `QIcon::fromTheme()` in `TrayIconManager.cpp` (generated from `tray-iconname` branch)
 
-## Install
+## Install (Arch Linux)
 
-Download `megasync_arch` from [Releases](../../releases), then:
+### PKGBUILD
 
 ```bash
-sudo cp megasync_arch /usr/bin/megasync
-sudo chmod +x /usr/bin/megasync
+git clone https://github.com/nnfewl/MEGAsync.git
+cd MEGAsync
+makepkg -si
 ```
 
-Requires Papirus (or another theme with `megauptodate`, `megasynching`, etc.) installed in your icon theme.
+### Manual
+
+Download `megasync-VERSION-arch.tar.zst` from [Releases](../../releases), then:
+
+```bash
+sudo tar -xf megasync-*-arch.tar.zst -C /
+```
+
+### Requirements
+
+An icon theme with MEGAsync icons (`megauptodate`, `megasynching`, etc.) — Papirus, Tela, etc.
 
 ## Branches
 
