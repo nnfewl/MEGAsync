@@ -246,6 +246,18 @@ jobs:
             --target pipeline \
             artifacts/megasync-${UPSTREAM_VERSION}-arch.tar.zst
 
+      - name: Update PKGBUILD version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPSTREAM_VERSION: ${{ needs.detect-upstream.outputs.upstream-version }}
+        run: |
+          git config user.email "megasync-pipeline@local"
+          git config user.name  "megasync-pipeline"
+          sed -i "s/^pkgver=.*/pkgver=${UPSTREAM_VERSION}/" PKGBUILD
+          git add PKGBUILD
+          git commit -m "pkgver: ${UPSTREAM_VERSION}"
+          git push origin pipeline
+
   # -------------------------------------------------------------------
   # cleanup: keep 5 most recent releases
   # -------------------------------------------------------------------

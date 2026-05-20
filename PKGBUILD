@@ -1,5 +1,5 @@
 pkgname=megasync-bin
-pkgver=6.3.0.1
+pkgver=6.3.1.0
 pkgrel=1
 pkgdesc='MEGAsync with theme-native tray icons (Papirus/Tela support)'
 arch=('x86_64')
@@ -34,6 +34,7 @@ optdepends=('xdg-desktop-portal: follow the desktop color scheme (using dbus)'
             'glib2: follow the desktop color scheme (using gsettings)')
 source=("https://github.com/nnfewl/MEGAsync/releases/download/linux-v${pkgver}/megasync-${pkgver}-arch.tar.zst")
 sha256sums=('SKIP')
+options=(!debug)
 
 package() {
     cp -a "$srcdir/usr" "$pkgdir/"
