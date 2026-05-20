@@ -73,6 +73,33 @@ jobs:
 
           git push origin "refs/tags/${UPSTREAM_TAG}" --force
 
+      - name: Rebase tray-iconname onto new tag
+        env:
+          UPSTREAM_TAG: ${{ needs.detect-upstream.outputs.upstream-tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git fetch origin tray-iconname
+          git checkout tray-iconname
+          if git rebase "$UPSTREAM_TAG"; then
+            git push origin tray-iconname --force-with-lease
+          else
+            git rebase --abort
+            gh issue create \
+              --title "Rebase needed: tray-iconname onto ${UPSTREAM_TAG}" \
+              --body "Automated rebase of \`tray-iconname\` onto \`${UPSTREAM_TAG}\` failed due to conflicts. Please rebase manually:
+
+          \`\`\`bash
+          git fetch origin
+          git checkout tray-iconname
+          git rebase ${UPSTREAM_TAG}
+          # resolve conflicts
+          git push origin tray-iconname --force-with-lease
+          \`\`\`
+
+          Then re-run the pipeline: \`gh workflow run release.yml --ref pipeline -f force_rebuild=true\`"
+            exit 1
+          fi
+
   # -------------------------------------------------------------------
   # build-arch: Arch Linux container build
   # -------------------------------------------------------------------
