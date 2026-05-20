@@ -155,16 +155,18 @@ jobs:
 
       - name: Package artifact
         working-directory: build-src
+        env:
+          UPSTREAM_VERSION: ${{ needs.detect-upstream.outputs.upstream-version }}
         run: |
-          mkdir -p staging
-          strip --strip-unneeded build/src/MEGASync/megasync
-          cp build/src/MEGASync/megasync staging/megasync_arch
-          chmod +x staging/megasync_arch
+          DESTDIR="${PWD}/staging" cmake --install build
+          strip --strip-unneeded staging/usr/bin/megasync
+          rm -df staging/opt/megasync/lib staging/opt/megasync staging/opt
+          tar -C staging -cf "megasync-${UPSTREAM_VERSION}-arch.tar.zst" --zstd .
 
       - uses: actions/upload-artifact@v5
         with:
           name: megasync-arch-${{ needs.detect-upstream.outputs.upstream-version }}
-          path: build-src/staging/megasync_arch
+          path: build-src/megasync-${{ needs.detect-upstream.outputs.upstream-version }}-arch.tar.zst
           if-no-files-found: error
           retention-days: 30
 
@@ -207,8 +209,7 @@ jobs:
 
           ### Install
           \`\`\`bash
-          sudo cp megasync_arch /usr/bin/megasync
-          sudo chmod +x /usr/bin/megasync
+          sudo tar -xf megasync-${UPSTREAM_VERSION}-arch.tar.zst -C /
           \`\`\`
           EOF
 
@@ -216,7 +217,7 @@ jobs:
             --title "MEGAsync ${UPSTREAM_VERSION} (Arch, theme icons)" \
             --notes-file body.md \
             --target pipeline \
-            artifacts/megasync_arch
+            artifacts/megasync-${UPSTREAM_VERSION}-arch.tar.zst
 
   # -------------------------------------------------------------------
   # cleanup: keep 5 most recent releases
