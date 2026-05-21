@@ -435,6 +435,16 @@ public:
             mLoadingDelegate = new LoadingSceneDelegate<DelegateWidget>(mLoadingView);
             mLoadingView->setModel(mLoadingModel);
             mLoadingView->setItemDelegate(mLoadingDelegate);
+
+            const auto pageBackground = TokenParserWidgetManager::instance()
+                                            ->getColor(QLatin1String("page-background"))
+                                            .name(QColor::HexArgb);
+            const auto textPrimary = TokenParserWidgetManager::instance()
+                                         ->getColor(QLatin1String("text-primary"))
+                                         .name(QColor::HexArgb);
+            mLoadingView->setStyleSheet(
+                QString::fromLatin1("QTreeView { background-color: %1; color: %2; border: none; }")
+                    .arg(pageBackground, textPrimary));
         }
 
         if (state)
