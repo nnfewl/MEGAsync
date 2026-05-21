@@ -2853,9 +2853,15 @@ bool NodeSelectorModel::isRequestingNodes() const
 bool NodeSelectorModel::fetchItemChildren(const QModelIndex& parent)
 {
     NodeSelectorModelItem* item = static_cast<NodeSelectorModelItem*>(parent.internalPointer());
-    if (!item || item->areChildrenInitialized() || item->requestingChildren())
+    if (!item || item->areChildrenInitialized())
     {
         return false;
+    }
+
+    // A previous request is already in flight; its nodesReady will balance the caller's counter.
+    if (item->requestingChildren())
+    {
+        return true;
     }
 
     // Just in case the children changed

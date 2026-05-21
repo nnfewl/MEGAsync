@@ -436,15 +436,13 @@ public:
             mLoadingView->setModel(mLoadingModel);
             mLoadingView->setItemDelegate(mLoadingDelegate);
 
-            const auto pageBackground = TokenParserWidgetManager::instance()
-                                            ->getColor(QLatin1String("page-background"))
-                                            .name(QColor::HexArgb);
-            const auto textPrimary = TokenParserWidgetManager::instance()
-                                         ->getColor(QLatin1String("text-primary"))
-                                         .name(QColor::HexArgb);
             mLoadingView->setStyleSheet(
-                QString::fromLatin1("QTreeView { background-color: %1; color: %2; border: none; }")
-                    .arg(pageBackground, textPrimary));
+                QLatin1String("QTreeView {\n"
+                              "  background-color: #000000; /*colorToken.page-background*/\n"
+                              "  color: #000000; /*colorToken.text-primary*/\n"
+                              "  border: none;\n"
+                              "}\n"));
+            TokenParserWidgetManager::instance()->registerWidgetForTheming(mLoadingView);
         }
 
         if (state)
