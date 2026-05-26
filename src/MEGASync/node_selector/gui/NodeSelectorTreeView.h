@@ -94,7 +94,7 @@ signals:
     void pasteNodesClicked();
     void getMegaLinkClicked(const QList<MegaHandle>& handles);
     void restoreClicked(const QList<MegaHandle>& handles);
-    void nodeSelected();
+    void enterKeyPressed();
     void newFolderClicked();
     void uploadClicked();
 

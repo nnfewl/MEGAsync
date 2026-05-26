@@ -104,7 +104,7 @@ NodeSelector::NodeSelector(SelectTypeSPtr selectType, QWidget* parent):
     ui->bOk->setDefault(true);
     ui->bOk->setEnabled(false);
 
-    connect(ui->bOk, &QPushButton::clicked, this, &NodeSelector::onbOkClicked);
+    connect(ui->bOk, &QPushButton::clicked, this, &NodeSelector::confirmSelection);
     connect(ui->bCancel, &QPushButton::clicked, this, &NodeSelector::reject);
 
     resize(1024, 720);
@@ -205,14 +205,9 @@ void NodeSelector::mousePressEvent(QMouseEvent* event)
     QDialog::mousePressEvent(event);
 }
 
-void NodeSelector::onbOkClicked()
+void NodeSelector::confirmSelection()
 {
     auto currentViewContainer = getCurrentTreeViewWidget();
-    if (currentViewContainer && currentViewContainer->containsTakenDownSelected())
-    {
-        return;
-    }
-
     for (int page = 0; page < ui->stackedWidget->count(); ++page)
     {
         auto viewContainer = getTreeViewWidget(page);
@@ -500,9 +495,9 @@ void NodeSelector::initSpecialisedWidgets()
                     &NodeSelector::onUiIsBlocked,
                     Qt::UniqueConnection);
             connect(viewContainer,
-                    &NodeSelectorTreeViewWidget::okBtnClicked,
-                    this,
-                    &NodeSelector::onbOkClicked,
+                    &NodeSelectorTreeViewWidget::enterKeyPressed,
+                    ui->bOk,
+                    &QPushButton::click,
                     Qt::UniqueConnection);
             connect(viewContainer,
                     &NodeSelectorTreeViewWidget::viewReady,

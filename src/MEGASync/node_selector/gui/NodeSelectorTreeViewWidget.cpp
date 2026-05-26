@@ -502,9 +502,9 @@ void NodeSelectorTreeViewWidget::onExpandReady()
                 this,
                 &NodeSelectorTreeViewWidget::onItemDoubleClick);
         connect(ui->tMegaFolders,
-                &NodeSelectorTreeView::nodeSelected,
+                &NodeSelectorTreeView::enterKeyPressed,
                 this,
-                &NodeSelectorTreeViewWidget::okBtnClicked);
+                &NodeSelectorTreeViewWidget::enterKeyPressed);
         connect(ui->bForward,
                 &QPushButton::clicked,
                 this,

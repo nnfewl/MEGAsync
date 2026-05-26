@@ -42,7 +42,7 @@ void NodeSelectorDelegate::paint(QPainter* painter,
 
             if (!index.flags().testFlag(Qt::ItemIsEnabled))
             {
-                static const ALPHA_CORRECTION_FOR_ERROR_DISABLED = 0.5;
+                static constexpr double ALPHA_CORRECTION_FOR_ERROR_DISABLED = 0.5;
                 textColor.setAlphaF(ALPHA_CORRECTION_FOR_ERROR_DISABLED);
             }
         }

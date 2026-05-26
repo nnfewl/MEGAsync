@@ -112,7 +112,7 @@ public slots:
     void setLoadingSceneVisible(bool visible);
 
 signals:
-    void okBtnClicked();
+    void enterKeyPressed();
     void onCustomButtonClicked(uint id);
     void viewReady();
     void uiIsBlocked(bool state);
