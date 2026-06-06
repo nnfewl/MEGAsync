@@ -156,6 +156,7 @@ target_link_libraries(MEGAsync
     Qt5::QuickWidgets
 )
 
+
 ## Adjust compilation flags for warnings and errors ##
 target_platform_compile_options(
     TARGET MEGAsync
