@@ -142,14 +142,12 @@ jobs:
       - name: Apply AUR compatibility patches
         working-directory: build-src
         run: |
-          patch -d src/MEGASync/mega -Np1 --forward \
+          patch -d src/MEGASync/mega -Np1 \
             -i "$GITHUB_WORKSPACE/pipeline/patches/010-sdk-fix-cmake-dependencies-detection.patch"
-          patch -Np1 --forward \
+          patch -Np1 \
             -i "$GITHUB_WORKSPACE/pipeline/patches/020-app-fix-cmake-dependencies-detection.patch"
-          patch -Np1 --forward \
+          patch -Np1 \
             -i "$GITHUB_WORKSPACE/pipeline/patches/030-app-disable-isolated-gfx.patch"
-          patch -d src/MEGASync/mega -Np1 --forward \
-            -i "$GITHUB_WORKSPACE/pipeline/patches/040-sdk-add-missing-icu-link-library.patch"
 
       - name: Generate and apply theme patches
         working-directory: build-src
