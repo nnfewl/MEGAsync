@@ -21,6 +21,18 @@ static constexpr IconEntry ICON_TABLE[] = {
     {"someissues", "tray_icon_blocked.svg"},
 };
 
+#ifdef Q_OS_LINUX
+static const QMap<QString, QString> THEME_ICON_MAP = {
+    {QStringLiteral("uptodate"),   QStringLiteral("megauptodate")},
+    {QStringLiteral("synching"),   QStringLiteral("megasynching")},
+    {QStringLiteral("paused"),     QStringLiteral("megapaused")},
+    {QStringLiteral("logging"),    QStringLiteral("megalogging")},
+    {QStringLiteral("warning"),    QStringLiteral("megawarning")},
+    {QStringLiteral("alert"),      QStringLiteral("megaalert")},
+    {QStringLiteral("someissues"), QStringLiteral("megaalert")},
+};
+#endif
+
 } // namespace
 
 const TrayIconManager::AnimationDef TrayIconManager::ANIMATION_DEFS[] = {
@@ -134,6 +146,18 @@ void TrayIconManager::setIconAndTooltip(const QString& stateName, const QString&
 
 void TrayIconManager::applyCurrentStaticIcon()
 {
+#ifdef Q_OS_LINUX
+    QString themeName = THEME_ICON_MAP.value(mCurrentStateName);
+    if (!themeName.isEmpty())
+    {
+        QIcon themed = QIcon::fromTheme(themeName);
+        if (!themed.isNull())
+        {
+            applyIcon(themed);
+            return;
+        }
+    }
+#endif
     auto it = mStaticIcons.find(mCurrentStateName);
     if (it != mStaticIcons.end())
     {
@@ -151,6 +175,23 @@ void TrayIconManager::applyIcon(const QIcon& icon)
 
 void TrayIconManager::startAnimation(Animation animation)
 {
+#ifdef Q_OS_LINUX
+    mCurrentAnimation = animation;
+    QString stateName = (animation == Animation::Logging)
+        ? QStringLiteral("logging") : QStringLiteral("synching");
+    QString themeName = THEME_ICON_MAP.value(stateName);
+    if (!themeName.isEmpty())
+    {
+        QIcon themed = QIcon::fromTheme(themeName);
+        if (!themed.isNull())
+        {
+            applyIcon(themed);
+            return;
+        }
+    }
+    return;
+#endif
+
     const bool animationChanged = (mCurrentAnimation != animation);
     mCurrentAnimation = animation;
 
