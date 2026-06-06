@@ -254,8 +254,7 @@ jobs:
           git config user.name  "megasync-pipeline"
           sed -i "s/^pkgver=.*/pkgver=${UPSTREAM_VERSION}/" PKGBUILD
           git add PKGBUILD
-          git commit -m "pkgver: ${UPSTREAM_VERSION}"
-          git push origin pipeline
+          git diff --cached --quiet || (git commit -m "CI auto-updates PKGBUILD version, bump to ${UPSTREAM_VERSION}" && git push origin pipeline)
 
   # -------------------------------------------------------------------
   # cleanup: keep 5 most recent releases
