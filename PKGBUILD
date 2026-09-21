@@ -1,5 +1,5 @@
 pkgname=megasync-bin
-pkgver=6.5.1.0
+pkgver=6.6.2.0
 pkgrel=1
 pkgdesc='MEGAsync with theme-native tray icons (Papirus/Tela support)'
 arch=('x86_64')
