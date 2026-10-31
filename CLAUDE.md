@@ -24,7 +24,7 @@
 
 ## When upstream releases a new version
 
-CI auto-rebases `tray-iconname` onto the new tag. If rebase fails (conflict), a GitHub issue is opened with manual instructions. Fix:
+CI rebases the single custom commit on `tray-iconname` onto the new tag, excluding upstream commits from the previous tag. Keep the branch as one custom commit on a Linux tag. If the rebase fails (conflict), CI attempts to open a GitHub issue with manual instructions. Fix:
 
 ```bash
 eval $(ssh-agent -s) && ssh-add ~/.ssh/github_rsa

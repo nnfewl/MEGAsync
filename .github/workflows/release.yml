@@ -81,23 +81,32 @@ jobs:
         run: |
           git fetch origin tray-iconname
           git checkout tray-iconname
-          if git rebase "$UPSTREAM_TAG"; then
+          # The branch contains one custom commit on the previous Linux tag.
+          # Release tags can diverge, so replay only that commit, not the
+          # upstream commits between the tags' merge base and the old tag.
+          if ! git tag --points-at 'tray-iconname^' | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_Linux$'; then
+            echo "::error::tray-iconname must have one custom commit directly on a Linux release tag."
+            exit 1
+          fi
+          if git rebase --onto "$UPSTREAM_TAG" 'tray-iconname^' tray-iconname; then
             git push origin tray-iconname --force-with-lease
           else
             git rebase --abort
-            gh issue create \
+            if ! gh issue create \
               --title "Rebase needed: tray-iconname onto ${UPSTREAM_TAG}" \
               --body "Automated rebase of \`tray-iconname\` onto \`${UPSTREAM_TAG}\` failed due to conflicts. Please rebase manually:
 
           \`\`\`bash
           git fetch origin
           git checkout tray-iconname
-          git rebase ${UPSTREAM_TAG}
+          git rebase --onto ${UPSTREAM_TAG} 'tray-iconname^' tray-iconname
           # resolve conflicts
           git push origin tray-iconname --force-with-lease
           \`\`\`
 
-          Then re-run the pipeline: \`gh workflow run release.yml --ref pipeline -f force_rebuild=true\`"
+          Then re-run the pipeline: \`gh workflow run release.yml --ref pipeline -f force_rebuild=true\`"; then
+              echo "::warning::Could not create an issue for the failed tray-iconname rebase."
+            fi
             exit 1
           fi
 
